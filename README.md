@@ -11,7 +11,7 @@ npm.cmd --prefix client install
 npm.cmd --prefix client run dev
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5173`. The root URL opens the existing Dashboard in public preview mode. Its student identity card uses a clearly labeled demo profile when there is no authenticated student session; it is not a real account.
 
 To verify a production build:
 
@@ -35,7 +35,9 @@ npm.cmd --prefix server run db:migrate:deploy
 npm.cmd --prefix server run db:generate
 ```
 
-There are exactly two account roles: `ADMIN` and `STUDENT`. Student sign-in is at `http://localhost:5173/student/login` (the older `/login` URL redirects there); administrator sign-in is at `/admin/login`. Student accounts are provisioned by an administrator; public registration is disabled. The browser receives a one-hour JWT in an HttpOnly, SameSite=Strict cookie; the token is not stored in local storage or exposed to frontend code. Configure `CLIENT_URL` with the exact frontend origin and set a private `JWT_SECRET` of at least 32 characters in `server\.env`. Production cookies are Secure automatically. If the frontend/API are hosted on different sites, configure HTTPS and review the cookie/CORS deployment settings before launch.
+There are exactly two account roles: `ADMIN` and `STUDENT`. The sign-in pages remain available by their direct `/student/login` and `/admin/login` URLs for account workflows, but are not linked from the dashboard. `/login` and `/register` return to the Dashboard. Student accounts are provisioned by an administrator; public registration is disabled. The browser receives a one-hour JWT in an HttpOnly, SameSite=Strict cookie; the token is not stored in local storage or exposed to frontend code. Configure `CLIENT_URL` with the exact frontend origin and set a private `JWT_SECRET` of at least 32 characters in `server\.env`. Production cookies are Secure automatically. If the frontend/API are hosted on different sites, configure HTTPS and review the cookie/CORS deployment settings before launch.
+
+The public dashboard presents the existing layout and navigation, but personal routes render an access-restricted page unless the correct authenticated role is present. Admin APIs, student profiles, borrowing history, notes, progress, resumes, certificates, projects, and other private records remain protected by backend authentication and ownership checks. Publicly deploy only material intended for general access (such as approved static learning content, the public book catalog, and explicitly shared public portfolios); do not make private account records, account management, circulation actions, or uploads public.
 
 Student profile fields are read from the authenticated account at `/api/auth/me` and `/api/profile`. Students may update their own profile and upload a JPEG, PNG, or WebP photo (maximum 5 MB); photo reads are authenticated and scoped to the current user. Student ID and email uniqueness are enforced by PostgreSQL.
 

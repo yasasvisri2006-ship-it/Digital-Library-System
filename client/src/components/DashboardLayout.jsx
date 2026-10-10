@@ -11,6 +11,7 @@ import {
 import { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { navigationItems } from '../data/navigation';
+import { publicDashboardProfile } from '../data/publicDashboardProfile';
 import { useAuth } from '../context/AuthContext';
 import { getInitials, getProfilePhotoUrl } from '../services/profilePhoto';
 
@@ -38,14 +39,16 @@ function BrandMark() {
 
 function StudentAvatar({ user, className = 'profile-avatar' }) {
   const [failedPhotoUrl, setFailedPhotoUrl] = useState('');
-  const photoUrl = getProfilePhotoUrl(user.studentProfile);
+  const photoUrl = user?.isDemo
+    ? '/images/student-photo.png'
+    : getProfilePhotoUrl(user?.studentProfile);
   const hasPhoto = Boolean(photoUrl && failedPhotoUrl !== photoUrl);
 
   return (
     <span className={className}>
       {hasPhoto && photoUrl
         ? <img src={photoUrl} alt="" crossOrigin="use-credentials" onError={() => setFailedPhotoUrl(photoUrl)} />
-        : getInitials(user.name)}
+      : getInitials(user?.name || publicDashboardProfile.name)}
     </span>
   );
 }
@@ -118,9 +121,10 @@ function Topbar({ onMenuOpen }) {
   const [openPanel, setOpenPanel] = useState('');
   const [logoutError, setLogoutError] = useState('');
   const { user, logout } = useAuth();
+  const displayedUser = user || publicDashboardProfile;
   const navigate = useNavigate();
   const location = useLocation();
-  const isDashboard = location.pathname === '/dashboard';
+  const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
   const homepageLinks = [
     { label: 'Home', to: '/dashboard' },
     { label: 'Books', to: '/digital-library' },
@@ -147,7 +151,7 @@ function Topbar({ onMenuOpen }) {
     setLogoutError('');
     try {
       await logout();
-      navigate('/login', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       setLogoutError(error.response?.data?.message || 'Unable to sign out. Please try again.');
     }
@@ -187,61 +191,63 @@ function Topbar({ onMenuOpen }) {
           <kbd>↵</kbd>
         </form>
 
-        <div className="action-menu-wrap">
-          <button
-            type="button"
-            className={`icon-button notification-button${openPanel === 'notifications' ? ' selected' : ''}`}
-            aria-label="Notifications"
-            aria-expanded={openPanel === 'notifications'}
-            onClick={() => togglePanel('notifications')}
-          >
-            <Bell size={19} />
-          </button>
-          {openPanel === 'notifications' && (
-            <div className="action-popover notification-popover">
-              <div className="popover-heading"><strong>Notifications</strong><span>Just for you</span></div>
-              <div className="popover-empty">
-                <span className="popover-empty-icon"><Bell size={18} /></span>
-                <strong>You’re all caught up</strong>
-                <span>New updates will appear here.</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="action-menu-wrap">
-          <button
-            type="button"
-            className={`profile-trigger${openPanel === 'profile' ? ' selected' : ''}`}
-            aria-expanded={openPanel === 'profile'}
-            aria-label="Open profile menu"
-            onClick={() => togglePanel('profile')}
-          >
-            <StudentAvatar user={user} />
-            <span className="profile-trigger-copy"><strong>{user.name}</strong><small>{user.role}</small></span>
-            <ChevronDown size={15} />
-          </button>
-          {openPanel === 'profile' && (
-            <div className="action-popover profile-popover">
-              <div className="profile-popover-heading">
-                <StudentAvatar user={user} />
-                <span><strong>{user.name}</strong><small>{user.studentProfile?.department || user.role}</small></span>
-              </div>
-              <Link to="/modules" onClick={() => setOpenPanel('')}>Modules</Link>
-              <Link to="/my-subjects" onClick={() => setOpenPanel('')}>My subjects</Link>
-              <Link to="/my-profile" onClick={() => setOpenPanel('')}>My profile</Link>
-              <Link to="/settings" onClick={() => setOpenPanel('')}>Settings</Link>
-              <Link to="/my-subjects" onClick={() => setOpenPanel('')}>My subjects</Link>
-              <Link to="/digital-library" onClick={() => setOpenPanel('')}>Digital library</Link>
-              <Link to="/my-resume" onClick={() => setOpenPanel('')}>My resume</Link>
-              <Link to="/certificates" onClick={() => setOpenPanel('')}>My certificates</Link>
-              {logoutError && <div className="logout-error-message" role="alert">{logoutError}</div>}
-              <button className="profile-logout-action" type="button" onClick={handleLogout}>
-                <LogOut size={15} /> Sign out
+        {user ? (
+          <>
+            <div className="action-menu-wrap">
+              <button
+                type="button"
+                className={`icon-button notification-button${openPanel === 'notifications' ? ' selected' : ''}`}
+                aria-label="Notifications"
+                aria-expanded={openPanel === 'notifications'}
+                onClick={() => togglePanel('notifications')}
+              >
+                <Bell size={19} />
               </button>
+              {openPanel === 'notifications' && (
+                <div className="action-popover notification-popover">
+                  <div className="popover-heading"><strong>Notifications</strong><span>Just for you</span></div>
+                  <div className="popover-empty">
+                    <span className="popover-empty-icon"><Bell size={18} /></span>
+                    <strong>You’re all caught up</strong>
+                    <span>New updates will appear here.</span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+            <div className="action-menu-wrap">
+              <button
+                type="button"
+                className={`profile-trigger${openPanel === 'profile' ? ' selected' : ''}`}
+                aria-expanded={openPanel === 'profile'}
+                aria-label="Open profile menu"
+                onClick={() => togglePanel('profile')}
+              >
+                <StudentAvatar user={displayedUser} />
+                <span className="profile-trigger-copy"><strong>{user.name}</strong><small>{user.role}</small></span>
+                <ChevronDown size={15} />
+              </button>
+              {openPanel === 'profile' && (
+                <div className="action-popover profile-popover">
+                  <div className="profile-popover-heading">
+                    <StudentAvatar user={displayedUser} />
+                    <span><strong>{user.name}</strong><small>{user.studentProfile?.department || user.role}</small></span>
+                  </div>
+                  <Link to="/modules" onClick={() => setOpenPanel('')}>Modules</Link>
+                  <Link to="/my-subjects" onClick={() => setOpenPanel('')}>My subjects</Link>
+                  <Link to="/my-profile" onClick={() => setOpenPanel('')}>My profile</Link>
+                  <Link to="/settings" onClick={() => setOpenPanel('')}>Settings</Link>
+                  <Link to="/digital-library" onClick={() => setOpenPanel('')}>Digital library</Link>
+                  <Link to="/my-resume" onClick={() => setOpenPanel('')}>My resume</Link>
+                  <Link to="/certificates" onClick={() => setOpenPanel('')}>My certificates</Link>
+                  {logoutError && <div className="logout-error-message" role="alert">{logoutError}</div>}
+                  <button className="profile-logout-action" type="button" onClick={handleLogout}>
+                    <LogOut size={15} /> Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        ) : <span className="public-preview-badge">Public preview</span>}
       </div>
       <svg className="header-floral" viewBox="0 0 78 110" aria-hidden="true">
         <path d="M78 99C57 79 51 51 58 9" fill="none" stroke="#efcbd0" strokeWidth="1.5" />

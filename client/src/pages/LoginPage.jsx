@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import LoadingPage from '../components/LoadingPage';
 import { useAuth } from '../context/AuthContext';
@@ -109,11 +108,6 @@ export default function LoginPage({ role = 'student' }) {
       {!isAdmin
         ? <p className="mbu-account-access-note">Account access is provided by your administrator. Contact the library administrator if you need an account.</p>
         : <p className="mbu-account-access-note">Administrator accounts are reserved for authorized library staff.</p>}
-      <p className="mbu-auth-role-link">
-        {isAdmin
-          ? <>Student? <Link to="/student/login">Student login</Link></>
-          : <>Administrator? <Link to="/admin/login">Admin login</Link></>}
-      </p>
       <p className="mbu-auth-footnote">Your academic space, all in one place.</p>
     </AuthLayout>
   );

@@ -11,11 +11,12 @@ import {
   UserRound,
   Wrench,
 } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { facultyProfile } from '../data/mockFaculty';
 import { quickAccessItems } from '../data/navigation';
 import { socialLinks } from '../data/socialLinks';
+import { publicDashboardProfile } from '../data/publicDashboardProfile';
 import { useAuth } from '../context/AuthContext';
 import { getProfilePhotoUrl } from '../services/profilePhoto';
 
@@ -85,38 +86,41 @@ function QuickAccessPanel() {
 
 function StudentIdentityCard() {
   const { user } = useAuth();
-  const studentProfile = user.studentProfile || {};
+  const displayedUser = user?.role === 'student' ? user : publicDashboardProfile;
+  const studentProfile = displayedUser.studentProfile || {};
   const [hasLogo, setHasLogo] = useState(true);
   const [failedPhotoUrl, setFailedPhotoUrl] = useState('');
-  const studentPhotoUrl = getProfilePhotoUrl(studentProfile);
+  const studentPhotoUrl = displayedUser.isDemo
+    ? '/images/student-photo.png'
+    : getProfilePhotoUrl(studentProfile);
   const hasStudentPhoto = Boolean(studentPhotoUrl && failedPhotoUrl !== studentPhotoUrl);
-  const studentDetails = [
-    ['Student ID', studentProfile.studentId],
-    ['Program', studentProfile.program],
-    ['Department', studentProfile.department || studentProfile.branch],
-    ['Year', studentProfile.year],
-    ['Semester', studentProfile.semester],
-  ];
-
   return (
     <article className="ds-id-card">
       <div className="ds-id-header">
-        {hasLogo ? <img src="/images/mbu-logo.png" alt="Mohan Babu University" onError={() => setHasLogo(false)} /> : <span className="ds-logo-fallback">MBU</span>}
-        <strong className="ds-id-university">MOHAN BABU UNIVERSITY</strong>
-        <span className="ds-id-title">STUDENT IDENTITY CARD</span>
+        {hasLogo
+          ? <img src="/images/mbu-logo.png" alt="Mohan Babu University" onError={() => setHasLogo(false)} />
+          : <span className="ds-id-brand"><strong>MBU</strong><small>MOHAN BABU UNIVERSITY</small></span>}
+        <span className="ds-id-divider" aria-hidden="true" />
+        <strong className="ds-id-title">STUDENT IDENTITY CARD</strong>
       </div>
       <div className="ds-id-body">
-        <span className="ds-student-photo">
-          {hasStudentPhoto
-            ? <img src={studentPhotoUrl} alt={`${user.name} profile`} crossOrigin="use-credentials" onError={() => setFailedPhotoUrl(studentPhotoUrl)} />
-            : <UserRound size={35} />}
-        </span>
-        <strong className="ds-id-student-name">{user.name}</strong>
-        <div className="ds-id-fields">
-          {studentDetails.map(([label, value]) => (
-            <p key={label}><span>{label}</span><strong>{value || 'Not provided'}</strong></p>
-          ))}
+        <div className="ds-id-person">
+          <span className="ds-student-photo">
+            {hasStudentPhoto
+              ? <img src={studentPhotoUrl} alt={`${displayedUser.name} profile`} crossOrigin="use-credentials" onError={() => setFailedPhotoUrl(studentPhotoUrl)} />
+              : <UserRound size={35} />}
+          </span>
+          <div className="ds-id-fields">
+            <p><span>Name:</span><strong>{displayedUser.name}</strong></p>
+            <p><span>Branch:</span><strong>{studentProfile.branch || 'Not provided'}</strong></p>
+            <p><span>Department:</span><strong>{studentProfile.department || 'Not provided'}</strong></p>
+          </div>
         </div>
+        <div className="ds-id-bottom">
+          <p><span>Semester:</span><strong>{studentProfile.semester || 'Not provided'}</strong></p>
+          <p><span>Student ID:</span><strong>{studentProfile.studentId || 'Not provided'}</strong></p>
+        </div>
+        {displayedUser.isDemo && <span className="dashboard-demo-label">DEMO PREVIEW · SAMPLE PROFILE</span>}
       </div>
     </article>
   );
@@ -200,9 +204,6 @@ function ConnectWithMeCard() {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  if (user?.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-
   return (
     <div className="ds-dashboard">
       <WelcomeBanner />

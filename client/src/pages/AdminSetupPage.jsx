@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, KeyRound, ShieldCheck, UserRound } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import LoadingPage from '../components/LoadingPage';
 import api from '../services/api';
@@ -41,12 +41,21 @@ export default function AdminSetupPage() {
           <p>We could not verify whether one-time setup is available.</p>
         </div>
         <div className="mbu-form-message is-error" role="alert">{statusError}</div>
-        <Link className="mbu-submit-button admin-setup-back-link" to="/admin/login">Administrator login</Link>
+        <Link className="mbu-submit-button admin-setup-back-link" to="/dashboard">Return to dashboard</Link>
       </AuthLayout>
     );
   }
   if (!setupAvailable) {
-    return <Navigate to="/admin/login" replace state={{ setupUnavailable: true }} />;
+    return (
+      <AuthLayout variant="login">
+        <div className="mbu-auth-heading">
+          <span className="mbu-auth-icon"><ShieldCheck size={25} /></span>
+          <h1>First Admin Setup</h1>
+          <p>Administrator setup is unavailable because an administrator already exists or setup is disabled.</p>
+        </div>
+        <Link className="mbu-submit-button admin-setup-back-link" to="/dashboard">Return to dashboard</Link>
+      </AuthLayout>
+    );
   }
 
   async function submitSetup(event) {
@@ -95,11 +104,11 @@ export default function AdminSetupPage() {
         </form>
       ) : (
         <div className="mbu-form-message" role="status">
-          Administrator setup is complete. Sign in to continue.
+          Administrator setup is complete.
         </div>
       )}
       {setupAvailable && <p className="mbu-account-access-note">Setup closes automatically after the first administrator is created.</p>}
-      <p className="mbu-auth-role-link"><UserRound size={14} /> <Link to="/admin/login">Administrator login</Link></p>
+      <p className="mbu-auth-role-link"><UserRound size={14} /> Setup is available only for the initial administrator.</p>
     </AuthLayout>
   );
 }

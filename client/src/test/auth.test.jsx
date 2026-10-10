@@ -1,10 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { AppRoutes } from '../App';
+import DashboardLayout from '../components/DashboardLayout';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from '../components/ProtectedRoute';
-import DashboardLayout from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 
 vi.mock('../context/AuthContext', () => ({ useAuth: vi.fn() }));
@@ -49,19 +50,20 @@ describe('authentication screens', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid credentials.');
   });
 
-  it('redirects a signed-in user without the required role away from an admin page', () => {
+  it('keeps admin-only content restricted without redirecting to a login page', () => {
     useAuth.mockReturnValue({ user: { role: 'student' }, loading: false, sessionError: '' });
     render(
       <MemoryRouter initialEntries={['/admin/users/create']}>
         <Routes>
-          <Route path="/dashboard" element={<p>Student dashboard</p>} />
+          <Route path="/admin/login" element={<p>Admin login page</p>} />
           <Route path="/admin/users/create" element={<ProtectedRoute allowedRoles={['admin']}><p>Admin tools</p></ProtectedRoute>} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Student dashboard')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Administrator access required' })).toBeInTheDocument();
     expect(screen.queryByText('Admin tools')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin login page')).not.toBeInTheDocument();
   });
 
   it('does not redirect while the session check is pending', () => {
@@ -79,22 +81,19 @@ describe('authentication screens', () => {
     expect(screen.queryByText('Admin login page')).not.toBeInTheDocument();
   });
 
-  it('sends unauthenticated users to login with their requested route preserved', () => {
+  it('shows a restricted page instead of redirecting unauthenticated users to login', () => {
     useAuth.mockReturnValue({ user: null, loading: false, sessionError: '' });
-    function LoginDestination() {
-      const location = useLocation();
-      return <p>Login destination: {location.state?.from}</p>;
-    }
     render(
       <MemoryRouter initialEntries={['/admin/users/create?filter=active']}>
         <Routes>
-          <Route path="/admin/login" element={<LoginDestination />} />
+          <Route path="/admin/login" element={<p>Admin login page</p>} />
           <Route path="/admin/users/create" element={<ProtectedRoute allowedRoles={['admin']}><p>Admin tools</p></ProtectedRoute>} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Login destination: /admin/users/create?filter=active')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Administrator access required' })).toBeInTheDocument();
+    expect(screen.queryByText('Admin login page')).not.toBeInTheDocument();
   });
 
   it('keeps the protected page visible when session restoration cannot reach the API', () => {
@@ -116,18 +115,23 @@ describe('authentication screens', () => {
     expect(screen.queryByText('Admin login page')).not.toBeInTheDocument();
   });
 
-  it('routes an already signed-in administrator to user management from login', () => {
-    useAuth.mockReturnValue({ user: { role: 'admin' }, loading: false, sessionError: '' });
+  it('opens the existing dashboard at the site root with a labeled demo profile and no login links', async () => {
+    useAuth.mockReturnValue({ user: null, logout: vi.fn(), loading: false, sessionError: '' });
     render(
-      <MemoryRouter initialEntries={['/login']}>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin/users/create" element={<p>Admin tools</p>} />
-        </Routes>
+      <MemoryRouter initialEntries={['/']}>
+        <AppRoutes />
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Admin tools')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Data Science Library/i })).toBeInTheDocument();
+    expect(screen.getByText('Peta Yasasvisri')).toBeInTheDocument();
+    expect(screen.getByText('DEMO PREVIEW · SAMPLE PROFILE')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Peta Yasasvisri profile' })).toHaveAttribute('src', '/images/student-photo.png');
+    expect(screen.getByText('CSE (DS)')).toBeInTheDocument();
+    expect(screen.getByText('Data Science')).toBeInTheDocument();
+    expect(screen.getByText('25302A030001')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Student portal navigation' })).toHaveTextContent('Digital Library');
+    expect(screen.queryByRole('link', { name: /login|sign in|register/i })).not.toBeInTheDocument();
   });
 
   it('renders the dashboard navigation for a signed-in student', () => {

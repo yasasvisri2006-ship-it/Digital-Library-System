@@ -1,4 +1,5 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import AccessRestrictedPage from './AccessRestrictedPage';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProtectedRoute({ children, allowedRoles = ['student', 'admin'] }) {
@@ -30,17 +31,7 @@ export default function ProtectedRoute({ children, allowedRoles = ['student', 'a
     );
   }
 
-  if (!user) {
-    const loginPath = allowedRoles.length === 1 && allowedRoles[0] === 'admin'
-      ? '/admin/login'
-      : '/student/login';
-    return <Navigate
-      to={loginPath}
-      replace
-      state={{ from: `${location.pathname}${location.search}${location.hash}` }}
-    />;
-  }
-  if (!allowedRoles.includes(user.role)) return <Navigate to="/dashboard" replace />;
+  if (!user || !allowedRoles.includes(user.role)) return <AccessRestrictedPage />;
 
   return children;
 }

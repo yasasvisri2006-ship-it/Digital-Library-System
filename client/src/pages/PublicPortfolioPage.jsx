@@ -23,14 +23,14 @@ export default function PublicPortfolioPage() {
   }, [slug]);
 
   if (loading) return <main className="public-portfolio-loading">Loading portfolio...</main>;
-  if (error || !portfolio) return <main className="public-portfolio-missing"><span><FileText size={24} /></span><h1>Portfolio unavailable</h1><p>{error || 'This portfolio is not public.'}</p><Link to="/login">MBU Digital Library</Link></main>;
+  if (error || !portfolio) return <main className="public-portfolio-missing"><span><FileText size={24} /></span><h1>Portfolio unavailable</h1><p>{error || 'This portfolio is not public.'}</p><Link to="/dashboard">MBU Digital Library</Link></main>;
 
   const { resume, projects, certificates } = portfolio;
   const hasSocial = resume.social && (resume.social.linkedInUrl || resume.social.githubUrl || resume.social.portfolioUrl);
 
   return (
     <main className="public-portfolio">
-      <header className="public-portfolio-top"><Link to="/login" className="public-brand">MBU <span>Digital Library</span></Link><span>Student Portfolio</span></header>
+      <header className="public-portfolio-top"><Link to="/dashboard" className="public-brand">MBU <span>Digital Library</span></Link><span>Student Portfolio</span></header>
       <article className="public-resume-sheet">
         <header className="public-resume-header">
           <span className="public-profile-monogram">{resume.displayName.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
@@ -52,7 +52,7 @@ export default function PublicPortfolioPage() {
         {resume.achievements.length > 0 && <section className="public-resume-section"><h2><Award size={16} /> Achievements</h2><ul>{resume.achievements.map((achievement, index) => <li key={`achievement-${index}`}>{achievement}</li>)}</ul></section>}
         {hasSocial && <section className="public-resume-section"><h2><BriefcaseBusiness size={16} /> Professional Links</h2><div className="public-social-links">{resume.social.linkedInUrl && <a href={resume.social.linkedInUrl} target="_blank" rel="noreferrer">LinkedIn <ArrowUpRight size={13} /></a>}{resume.social.githubUrl && <a href={resume.social.githubUrl} target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={13} /></a>}{resume.social.portfolioUrl && <a href={resume.social.portfolioUrl} target="_blank" rel="noreferrer">Portfolio <ArrowUpRight size={13} /></a>}</div></section>}
       </article>
-      <footer className="public-portfolio-footer">Shared by the portfolio owner · <a href={`${window.location.origin}/login`}>MBU Digital Library</a></footer>
+      <footer className="public-portfolio-footer">Shared by the portfolio owner · <a href={`${window.location.origin}/dashboard`}>MBU Digital Library</a></footer>
     </main>
   );
 }

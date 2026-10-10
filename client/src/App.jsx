@@ -44,18 +44,18 @@ const modulePaths = [
   '/settings',
 ];
 
-function AppRoutes() {
+export function AppRoutes() {
   return (
     <Suspense fallback={<LoadingPage />}>
       <Routes>
-        <Route path="/login" element={<Navigate to="/student/login" replace />} />
+        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
         <Route path="/student/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<LoginPage role="admin" />} />
         <Route path="/admin/setup" element={<AdminSetupPage />} />
-        <Route path="/register" element={<Navigate to="/login" replace />} />
+        <Route path="/register" element={<Navigate to="/dashboard" replace />} />
         <Route path="/portfolio/:slug" element={<PublicPortfolioPage />} />
-        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route element={<DashboardLayout />}>
+          <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/users/create" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
