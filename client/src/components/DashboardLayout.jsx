@@ -31,7 +31,7 @@ function BrandMark() {
       <span className="branding-divider" />
       <div className="library-lockup">
         <BookOpen size={27} strokeWidth={1.7} />
-        <span><strong>MBU DIGITAL LIBRARY</strong><small>Your Academic Space, All in One Place</small></span>
+        <span><strong>DIGITAL LIBRARY</strong></span>
       </div>
     </div>
   );
