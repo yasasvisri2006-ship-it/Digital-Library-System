@@ -128,10 +128,12 @@ function StudentIdentityCard() {
 
 function FacultyCard() {
   return (
-    <article className="ds-faculty-card">
-      <div className="ds-faculty-heading"><UserRound size={18} /><h2>Faculty Name</h2></div>
-      <strong>{facultyProfile.name}</strong>
-      <span>{facultyProfile.title}</span>
+    <article className="ds-faculty-card" aria-label="Faculty Information">
+      <div className="ds-faculty-heading"><UserRound size={18} /><h2>Faculty Information</h2></div>
+      <div className="ds-faculty-details">
+        <p><span>Faculty Name</span><strong>{facultyProfile.name}</strong></p>
+        <p><span>Designation</span><strong>{facultyProfile.title}</strong></p>
+      </div>
     </article>
   );
 }
@@ -207,13 +209,15 @@ export default function DashboardPage() {
   return (
     <div className="ds-dashboard">
       <WelcomeBanner />
-      <StudentIdentityCard />
+      <div className="ds-dashboard-identity">
+        <StudentIdentityCard />
+        <FacultyCard />
+      </div>
       <main className="ds-dashboard-main">
         <QuickAccessPanel />
         <RecentBooksPanel />
       </main>
       <aside className="ds-dashboard-aside" aria-label="Student information">
-        <FacultyCard />
         <ConnectWithMeCard />
         <MotivationCard />
         <Link to="/my-resume" className="ds-resume-link"><FileText size={15} /> View my academic profile <ArrowRight size={14} /></Link>

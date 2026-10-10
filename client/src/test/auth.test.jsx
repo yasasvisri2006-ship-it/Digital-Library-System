@@ -130,6 +130,14 @@ describe('authentication screens', () => {
     expect(screen.getByText('CSE (DS)')).toBeInTheDocument();
     expect(screen.getByText('Data Science')).toBeInTheDocument();
     expect(screen.getByText('25302A030001')).toBeInTheDocument();
+    const identityCard = screen.getByText('STUDENT IDENTITY CARD').closest('.ds-id-card');
+    const facultyCard = screen.getByRole('heading', { name: 'Faculty Information' }).closest('.ds-faculty-card');
+    expect(identityCard.parentElement).toHaveClass('ds-dashboard-identity');
+    expect(identityCard.parentElement.children[1]).toBe(facultyCard);
+    expect(facultyCard).toHaveTextContent('Faculty Name');
+    expect(facultyCard).toHaveTextContent('BOSUBABU SIR');
+    expect(facultyCard).toHaveTextContent('Designation');
+    expect(facultyCard).toHaveTextContent('Assistant Professor');
     expect(screen.getByRole('navigation', { name: 'Student portal navigation' })).toHaveTextContent('Digital Library');
     expect(screen.queryByRole('link', { name: /login|sign in|register/i })).not.toBeInTheDocument();
   });

@@ -19,6 +19,28 @@ To verify a production build:
 npm.cmd --prefix client run build
 ```
 
+## Deploy the frontend to Render Static Sites
+
+The frontend is the React/Vite app in `client` (not the Express API package). Configure the Render Static Site with:
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | `client` |
+| Build Command | `npm ci && npm run build` |
+| Publish Directory | `dist` |
+
+Set `VITE_API_URL` in the Render site environment to the deployed API base URL, including `/api` (for example, `https://your-api-service.onrender.com/api`). This value is public frontend configuration; do not put database credentials, JWT secrets, or other private values in `VITE_` variables. If it is omitted, the frontend's development fallback points to `http://localhost:5000/api`, which is not suitable for a deployed site.
+
+Add a rewrite rule in the Render Static Site dashboard so client-side routes such as `/digital-library` work on direct navigation and refresh:
+
+| Source | Destination | Action |
+| --- | --- | --- |
+| `/*` | `/index.html` | Rewrite |
+
+Render manages static-site rewrites in the dashboard; no `_redirects` file is used. Vite requires Node.js `^20.19.0` or `>=22.12.0`; select a compatible Node version in the Render build environment.
+
+When deploying the API separately, set its server-side `CLIENT_URL` to the exact Render frontend origin. The server uses that setting to allow credentialed browser requests; do not loosen or bypass backend authorization to resolve CORS or login problems.
+
 ## Authentication and student profile
 
 Run the backend and frontend in separate terminals after completing the database setup below:
