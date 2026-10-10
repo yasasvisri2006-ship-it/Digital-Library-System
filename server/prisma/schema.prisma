@@ -1,0 +1,444 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}
+
+enum ResourceType {
+  SYLLABUS
+  NOTES
+  SLIDES
+  DOCUMENT
+  ASSIGNMENT
+  REFERENCE
+  VIDEO
+  LINK
+  OTHER
+}
+
+enum CodingDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum CodingLanguage {
+  PYTHON
+  SQL
+  JAVA
+  CPP
+  DSA
+}
+
+enum CodingEventType {
+  CREATED
+  UPDATED
+  DELETED
+  COMPLETED
+  REOPENED
+  BOOKMARKED
+  UNBOOKMARKED
+  NOTE_UPDATED
+}
+
+enum CertificateCategory {
+  GENERAL
+  AWS_CLOUD
+}
+
+enum CareerApplicationStatus {
+  SAVED
+  APPLIED
+  ASSESSMENT
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum CareerResourceType {
+  INTERVIEW_PREPARATION
+  APTITUDE_PRACTICE
+  TECHNICAL_INTERVIEW
+  OTHER
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum AssignmentStatus {
+  DRAFT
+  OPEN
+  SUBMITTED
+  GRADED
+  CLOSED
+}
+
+enum IssueStatus {
+  ACTIVE
+  RETURNED
+  LOST
+  CANCELLED
+}
+
+model User {
+  id                 String                @id @default(uuid()) @db.Uuid
+  name               String
+  email              String                @unique
+  passwordHash       String
+  role               UserRole              @default(STUDENT)
+  isActive           Boolean               @default(true)
+  tokenVersion       Int                   @default(0)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  studentProfile     StudentProfile?
+  subjects           Subject[]             @relation("SubjectOwner")
+  academicResources  AcademicResource[]
+  codingProblems     CodingProblem[]
+  codingEvents       CodingPracticeEvent[]
+  learningProgress   LearningProgress[]
+  cloudLabNotes      CloudLabNote[]
+  projects           Project[]
+  certificates       Certificate[]
+  projectScreenshots ProjectScreenshot[]
+  resumeProfile      ResumeProfile?
+  careerApplications CareerApplication[]
+  careerResources    CareerResource[]
+  assignments        Assignment[]
+  issues             Issue[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model StudentProfile {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @unique @db.Uuid
+  studentId  String?  @unique
+  program    String?
+  department String?
+  branch     String?
+  year       String?
+  semester   String?
+  section    String?
+  phone      String?
+  photoPath  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([department, year])
+}
+
+model Subject {
+  id          String             @id @default(uuid()) @db.Uuid
+  code        String?
+  name        String
+  description String?
+  semester    String?
+  ownerId     String?            @db.Uuid
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  owner       User?              @relation("SubjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  resources   AcademicResource[]
+  assignments Assignment[]
+
+  @@unique([ownerId, code])
+  @@index([ownerId])
+  @@index([name])
+}
+
+model AcademicResource {
+  id          String       @id @default(uuid()) @db.Uuid
+  ownerId     String       @db.Uuid
+  subjectId   String?      @db.Uuid
+  title       String
+  description String?
+  type        ResourceType @default(OTHER)
+  url         String?
+  filePath    String?
+  fileName    String?
+  fileSize    Int?
+  isReviewed  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  subject     Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  categories  Category[]
+
+  @@index([ownerId, createdAt])
+  @@index([subjectId])
+  @@index([type])
+}
+
+model CodingProblem {
+  id            String                @id @default(uuid()) @db.Uuid
+  ownerId       String                @db.Uuid
+  title         String
+  statement     String
+  language      CodingLanguage        @default(PYTHON)
+  topic         String?
+  difficulty    CodingDifficulty      @default(MEDIUM)
+  sourceUrl     String?
+  solutionNotes String?
+  isCompleted   Boolean               @default(false)
+  isBookmarked  Boolean               @default(false)
+  completedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  owner         User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  events        CodingPracticeEvent[]
+
+  @@index([ownerId, createdAt])
+  @@index([ownerId, language, difficulty])
+  @@index([ownerId, isCompleted, isBookmarked])
+}
+
+model CodingPracticeEvent {
+  id           String          @id @default(uuid()) @db.Uuid
+  ownerId      String          @db.Uuid
+  problemId    String?         @db.Uuid
+  problemTitle String
+  eventType    CodingEventType
+  createdAt    DateTime        @default(now())
+  owner        User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  problem      CodingProblem?  @relation(fields: [problemId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, createdAt])
+  @@index([problemId])
+}
+
+model LearningProgress {
+  id              String   @id @default(uuid()) @db.Uuid
+  ownerId         String   @db.Uuid
+  trackKey        String
+  notes           String   @default("")
+  isCompleted     Boolean  @default(false)
+  percentComplete Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  owner           User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, trackKey])
+  @@index([ownerId, updatedAt])
+}
+
+model CloudLabNote {
+  id         String   @id @default(uuid()) @db.Uuid
+  ownerId    String   @db.Uuid
+  title      String
+  notes      String
+  isComplete Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, updatedAt])
+}
+
+model Project {
+  id            String              @id @default(uuid()) @db.Uuid
+  ownerId       String              @db.Uuid
+  title         String
+  description   String?
+  status        ProjectStatus       @default(PLANNING)
+  repositoryUrl String?
+  demoUrl       String?
+  techStack     String[]            @default([])
+  documentation String?
+  isPublic      Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  owner         User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  screenshots   ProjectScreenshot[]
+
+  @@index([ownerId, status])
+  @@index([createdAt])
+}
+
+model ProjectScreenshot {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @db.Uuid
+  projectId String   @db.Uuid
+  filePath  String
+  fileName  String
+  mimeType  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, projectId])
+}
+
+model Certificate {
+  id            String              @id @default(uuid()) @db.Uuid
+  ownerId       String              @db.Uuid
+  title         String
+  issuer        String?
+  issuedAt      DateTime?
+  credentialUrl String?
+  category      CertificateCategory @default(GENERAL)
+  isPublic      Boolean             @default(false)
+  filePath      String?
+  fileName      String?
+  fileSize      Int?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  owner         User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, issuedAt])
+}
+
+model ResumeProfile {
+  id             String   @id @default(uuid()) @db.Uuid
+  ownerId        String   @unique @db.Uuid
+  publicSlug     String   @unique
+  isPublic       Boolean  @default(false)
+  displayName    String?
+  email          String?
+  phone          String?
+  location       String?
+  summary        String   @default("")
+  linkedInUrl    String?
+  githubUrl      String?
+  portfolioUrl   String?
+  skills         String[] @default([])
+  education      Json     @default("[]")
+  internships    Json     @default("[]")
+  achievements   Json     @default("[]")
+  publicSections String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([isPublic, publicSlug])
+}
+
+model CareerApplication {
+  id          String                  @id @default(uuid()) @db.Uuid
+  ownerId     String                  @db.Uuid
+  companyName String
+  role        String
+  appliedAt   DateTime?
+  status      CareerApplicationStatus @default(SAVED)
+  notes       String?
+  jobUrl      String?
+  isPublic    Boolean                 @default(false)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  owner       User                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, status, appliedAt])
+}
+
+model CareerResource {
+  id        String             @id @default(uuid()) @db.Uuid
+  ownerId   String             @db.Uuid
+  title     String
+  type      CareerResourceType
+  url       String?
+  notes     String?
+  isPublic  Boolean            @default(false)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  owner     User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, type])
+}
+
+model Assignment {
+  id            String           @id @default(uuid()) @db.Uuid
+  ownerId       String           @db.Uuid
+  subjectId     String?          @db.Uuid
+  title         String
+  description   String?
+  dueAt         DateTime?
+  status        AssignmentStatus @default(OPEN)
+  submissionUrl String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  owner         User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  subject       Subject?         @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, status])
+  @@index([subjectId])
+  @@index([dueAt])
+}
+
+model Book {
+  id              String     @id @default(uuid()) @db.Uuid
+  isbn            String?    @unique
+  title           String
+  author          String
+  department      String?
+  publisher       String?
+  publishedYear   Int?
+  description     String?
+  coverUrl        String?
+  totalCopies     Int        @default(0)
+  availableCopies Int        @default(0)
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  categories      Category[]
+  issues          Issue[]
+
+  @@index([title])
+  @@index([author])
+  @@index([department, isActive])
+  @@index([isActive, createdAt])
+}
+
+model Category {
+  id          String             @id @default(uuid()) @db.Uuid
+  name        String             @unique
+  description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  books       Book[]
+  resources   AcademicResource[]
+}
+
+model Issue {
+  id           String        @id @default(uuid()) @db.Uuid
+  bookId       String        @db.Uuid
+  userId       String        @db.Uuid
+  status       IssueStatus   @default(ACTIVE)
+  issuedAt     DateTime      @default(now())
+  dueAt        DateTime
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  book         Book          @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  returnRecord ReturnRecord?
+
+  @@index([bookId, status])
+  @@index([userId, status])
+  @@index([dueAt, status])
+  @@index([status, issuedAt])
+}
+
+model ReturnRecord {
+  id         String   @id @default(uuid()) @db.Uuid
+  issueId    String   @unique @db.Uuid
+  returnedAt DateTime @default(now())
+  condition  String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  issue      Issue    @relation(fields: [issueId], references: [id], onDelete: Restrict)
+
+  @@index([returnedAt])
+}

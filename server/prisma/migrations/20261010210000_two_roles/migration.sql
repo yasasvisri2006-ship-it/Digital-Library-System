@@ -1,0 +1,20 @@
+ALTER TYPE "UserRole" RENAME TO "UserRole_legacy";
+
+CREATE TYPE "UserRole" AS ENUM ('STUDENT', 'ADMIN');
+
+ALTER TABLE "User"
+ALTER COLUMN "role" DROP DEFAULT;
+
+ALTER TABLE "User"
+ALTER COLUMN "role" TYPE "UserRole"
+USING (
+  CASE
+    WHEN "role"::TEXT IN ('FACULTY', 'LIBRARIAN') THEN 'STUDENT'
+    ELSE "role"::TEXT
+  END
+)::"UserRole";
+
+ALTER TABLE "User"
+ALTER COLUMN "role" SET DEFAULT 'STUDENT'::"UserRole";
+
+DROP TYPE "UserRole_legacy";

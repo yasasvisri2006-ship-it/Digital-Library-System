@@ -1,0 +1,24 @@
+node_modules/
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!server/.env.example
+
+# Private keys and local credentials
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+secrets.*
+client/dist/
+server/dist/
+server/uploads/
+server/storage/
+.vite/
+coverage/
+.DS_Store
+npm-debug.log*
