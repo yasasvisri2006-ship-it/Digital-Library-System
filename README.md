@@ -110,56 +110,26 @@ If an admin URL redirects to login, confirm that the API is running at `http://l
 
 Open **My Subjects** in the sidebar or use `/my-subjects`. Subject records, optional semester labels, syllabus links/files, notes, assignments, and references are stored in PostgreSQL. Subjects can be added, edited, searched, filtered by semester, and deleted from the signed-in student's own list. Each subject detail page lists its private resources and supports resource edits/deletion, PDF upload/download, HTTP(S) reference links, and marking resources reviewed. The review percentage is calculated from that student's saved resource rows; it is not a claim of course completion. Adding a subject does not create an official MBU syllabus. The six optional demo subject names are clearly marked placeholders, are added only by a user action, and leave semester unset.
 
-Private resource operations use `/api/subjects` and `/api/subjects/:subjectId/resources`; the API derives the owner from the authenticated session and verifies ownership on every subject/resource operation. PDF uploads are limited to 20 MB, checked for PDF signatures, and downloaded only through the authenticated, owner-scoped API. In development and tests, academic resources use ignored `server/storage/academic-resources`; portfolio screenshots and certificates use ignored `server/storage/portfolio`. Render Free instances have ephemeral local filesystems, so production requires private Cloudflare R2 object storage (`ACADEMIC_RESOURCE_STORAGE_PROVIDER=r2`) for academic resources and portfolio files. Production startup rejects the local provider. Objects are read and written server-side through the S3 API. Do not enable public bucket access or use public object URLs.
+Private resource operations use `/api/subjects` and `/api/subjects/:subjectId/resources`; the API derives the owner from the authenticated session and verifies ownership on every subject/resource operation. PDF uploads are limited to 20 MB, checked for PDF signatures, and downloaded only through the authenticated, owner-scoped API. In development and tests, files use ignored local storage directories. Render Free instances have ephemeral local filesystems, so production must use private object storage. Supported providers are Cloudflare R2 (`r2`) and Supabase Storage (`supabase`); production startup rejects the local provider. Object keys are read and written only by the server-side adapter. Never expose the Supabase service-role key in frontend code or enable public bucket access.
 
-#### Configure Cloudflare R2 for the Render Web Service
+#### Configure Supabase Storage for the Render Web Service
 
-1. In Cloudflare, create an R2 bucket for academic resources. Leave public access/custom domains disabled. Create an R2 API token scoped to this bucket with **Object Read & Write** permissions, and note the account ID, access key ID, and secret access key. The application does not configure object ACLs or generate public or signed URLs.
-2. In the Render Web Service's **Environment** settings, add the following variables (keep all credentials server-side; never use `VITE_` names):
+1. In the Supabase project, create a **private** Storage bucket named `academic-files`. The service-role key bypasses Supabase RLS, so the Express API must remain the only holder of that key and must perform its existing authentication and ownership checks before file operations. Do not put the key in a `VITE_` variable or expose it to browsers.
+2. In the Render Web Service's **Environment** settings, configure the application variables below. Mark the service-role key as a secret:
 
    | Variable | Value |
    | --- | --- |
    | `NODE_ENV` | `production` |
-   | `ACADEMIC_RESOURCE_STORAGE_PROVIDER` | `r2` |
-   | `R2_ACCOUNT_ID` | Your 32-character Cloudflare account ID |
-   | `R2_ACCESS_KEY_ID` | The R2 token's access key ID |
-   | `R2_SECRET_ACCESS_KEY` | The R2 token's secret access key |
-   | `R2_BUCKET` | The bucket name created above |
+   | `ACADEMIC_RESOURCE_STORAGE_PROVIDER` | `supabase` |
+   | `SUPABASE_URL` | Project URL, such as `https://<project-ref>.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase project's server-side service-role key |
+   | `SUPABASE_STORAGE_BUCKET` | `academic-files` |
 
-   Continue to configure the API's existing production variables, including `DATABASE_URL`, `JWT_SECRET`, and `CLIENT_URL`. Set the Render Web Service to Node.js 20 or newer (`@aws-sdk/client-s3` requires Node.js 20+). `R2_ENDPOINT` is derived from the account ID by the server. `ACADEMIC_RESOURCE_STORAGE_DIR` and `PORTFOLIO_STORAGE_DIR` are only local-provider settings and are not needed on Render.
-3. If the existing PostgreSQL database has uploaded resources, screenshots, or certificates with non-null `filePath` values and the corresponding files still exist in the old storage directories, copy those objects to the new bucket **before** deploying the R2 configuration. Preserve every exact relative filename/object key because database records already contain those keys; no database migration or record rewrite is needed. First make the old files available locally and install/configure the AWS CLI. The following PowerShell commands hold the token only in temporary process environment variables:
+   Also configure the backend's existing `DATABASE_URL`, `JWT_SECRET`, and `CLIENT_URL`. `SUPABASE_URL` must use HTTPS. Set the Render Web Service runtime to Node.js 22 or newer, as required by the installed Supabase SDK. `ACADEMIC_RESOURCE_STORAGE_DIR` and `PORTFOLIO_STORAGE_DIR` are local-provider settings and are not needed in production.
+3. Existing database records keep their stored object keys; switching providers does not migrate object bytes. If any files are already stored in local storage or R2, copy each object to the private Supabase bucket using its **exact existing key** before switching the Render provider. Keep a database backup and retain the original storage until authenticated download checks pass. No file copy is needed if there are no existing uploads in the database.
+4. Deploy/restart the Render service. The API uploads, downloads, and deletes through Supabase Storage without issuing public or signed URLs. Private subject resources and portfolio files keep their existing ownership rules. Portfolio files are publicly readable only through the existing explicit public-portfolio routes when the owner and relevant item are marked public; the storage bucket remains private.
 
-   ```powershell
-   $env:R2_ACCOUNT_ID = "<account-id>"
-   $env:R2_BUCKET = "<bucket-name>"
-   $env:AWS_ACCESS_KEY_ID = Read-Host "R2 access key ID"
-   $secureR2Secret = Read-Host "R2 secret access key" -AsSecureString
-   try {
-     $env:AWS_SECRET_ACCESS_KEY = [System.Net.NetworkCredential]::new("", $secureR2Secret).Password
-     $env:AWS_DEFAULT_REGION = "auto"
-     aws s3 sync ".\server\storage\academic-resources" "s3://$env:R2_BUCKET" --endpoint-url "https://$env:R2_ACCOUNT_ID.r2.cloudflarestorage.com"
-     if ($LASTEXITCODE -ne 0) { throw "Academic-resource object copy failed." }
-     aws s3 sync ".\server\storage\portfolio" "s3://$env:R2_BUCKET" --endpoint-url "https://$env:R2_ACCOUNT_ID.r2.cloudflarestorage.com"
-     if ($LASTEXITCODE -ne 0) { throw "Portfolio object copy failed." }
-   } finally {
-     Remove-Item Env:R2_ACCOUNT_ID, Env:R2_BUCKET, Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_DEFAULT_REGION -ErrorAction SilentlyContinue
-     $secureR2Secret.Dispose()
-   }
-   ```
-
-   If portfolio files use a custom `PORTFOLIO_STORAGE_DIR`, use that folder instead of `.\server\storage\portfolio`. For a fresh database or when there are no existing uploads, skip the copy. Keep the original files and a database backup until you have verified downloads through the API.
-
-   The equivalent individual copy commands (if the R2 CLI environment is already configured) are:
-
-   ```powershell
-   aws s3 sync ".\server\storage\academic-resources" "s3://<bucket-name>" --endpoint-url "https://<account-id>.r2.cloudflarestorage.com"
-   aws s3 sync ".\server\storage\portfolio" "s3://<bucket-name>" --endpoint-url "https://<account-id>.r2.cloudflarestorage.com"
-   ```
-
-   From another working directory, adjust the local source paths.
-4. Deploy/restart the Render service. Startup validates the provider and all four R2 settings; missing or invalid configuration fails explicitly. Academic resources and private portfolio files are fetched from the private bucket only after the API's existing authentication/ownership checks. Existing explicitly-public portfolio routes continue to serve only files whose public portfolio/project/certificate records are marked public; the R2 bucket itself remains private. Files never need a Render persistent disk or a public bucket URL.
-
-`@aws-sdk/client-s3` is used to access R2's S3-compatible API; it is installed as a server dependency.
+The `@supabase/supabase-js` package is used for Supabase Storage. The existing `@aws-sdk/client-s3` dependency and `r2` provider remain available for deployments already configured with R2.
 
 ### Educational resource catalog
 
@@ -176,9 +146,9 @@ npm.cmd --prefix server run education:generate
 npm.cmd --prefix server run education:seed
 ```
 
-For Render, keep the Web Service on the Free plan and configure the private R2 bucket and environment variables in the R2 instructions above. Apply the migration with `db:migrate:deploy`; then run `education:seed` once from a trusted machine or one-off process configured with the same production `DATABASE_URL` and R2 credentials. The seed command upserts catalog metadata and uploads the packaged PDF/PPTX files into private `catalog/` object keys. Re-running it is safe and updates those catalog objects. Do not run the seed against a production database until the R2 bucket and credentials are configured. The generated assets must be present when the seed runs; use `education:generate` if they are absent.
+For Render, keep the Web Service on the Free plan and configure the private object-storage bucket and environment variables in the provider instructions above. Apply the migration with `db:migrate:deploy`; then run `education:seed` once from a trusted machine or one-off process configured with the same production `DATABASE_URL` and storage-provider credentials. The seed command upserts catalog metadata and uploads the packaged PDF/PPTX files into private `catalog/` object keys. Re-running it is safe and updates those catalog objects. Do not run the seed against a production database until the private bucket and credentials are configured. The generated assets must be present when the seed runs; use `education:generate` if they are absent.
 
-Catalog descriptions and source links are available without an account. Downloads are streamed through the API and require an authenticated student; no public or signed object-storage URLs are returned. An R2 bucket is not made public. Verify a student login and an authenticated download after seeding. The catalog and files have not been migrated, seeded, uploaded, or deployed by this repository change.
+Catalog descriptions and source links are available without an account. Downloads are streamed through the API and require an authenticated student; no public or signed object-storage URLs are returned. Keep the storage bucket private. Verify a student login and an authenticated download after seeding. The catalog and files have not been migrated, seeded, uploaded, or deployed by this repository change.
 
 Yasasvi is not hardcoded into the shared dashboard. To create an explicitly labeled local demo student, set `DEMO_STUDENT_ENABLED=true`, `DEMO_STUDENT_EMAIL` to a dedicated address, and `DEMO_STUDENT_PASSWORD` (12–72 bytes) in `server\.env`, then run the seed script. The seed refuses to overwrite an account not labeled `Yasasvi (DEMO)`. Keep the demo option disabled outside local development.
 
@@ -198,7 +168,7 @@ The private career area is available from the sidebar at **My Projects**, **My R
 
 All portfolio editing endpoints use the authenticated student's owner ID; the API never accepts a browser-supplied owner ID. Projects, certificates, resume sections, internship applications, and saved resources remain private by default. To publish, enable the resume and choose which resume sections to expose, then separately opt in individual projects and certificates. Copy the generated opaque link from **My Resume** to share `/portfolio/:slug`. The read-only public API is `/api/public/portfolio/:slug` and only returns explicitly public resume sections, projects, and certificates. Internship applications and career resources are never included in the public response. Private screenshot/certificate downloads require authentication; public file access requires both a public resume and a separately public project/certificate.
 
-Private project screenshots accept JPEG, PNG, or WebP up to 8 MB; certificate uploads accept PDF up to 20 MB. Files are signature-checked, stored with random names outside the web root, and served by owner-authorized API handlers. Development storage defaults to ignored `server/storage/portfolio`. Production uses the private R2 bucket configured above; keep it private. Portfolio items are publicly served only when the owner explicitly shares them and the relevant project/certificate is marked public. Do not commit `.env` or expose object-store credentials in frontend variables.
+Private project screenshots accept JPEG, PNG, or WebP up to 8 MB; certificate uploads accept PDF up to 20 MB. Files are signature-checked, stored with random names outside the web root, and served by owner-authorized API handlers. Development storage defaults to ignored `server/storage/portfolio`. Production uses the configured private object-storage bucket. Portfolio items are publicly served only when the owner explicitly shares them and the relevant project/certificate is marked public. Do not commit `.env` or expose object-store credentials in frontend variables.
 
 The career schema migration is `server/prisma/migrations/20261010170000_portfolio_career`. Apply pending migrations and regenerate the client with:
 

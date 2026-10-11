@@ -21,10 +21,10 @@ function loadEnv(overrides) {
   });
 }
 
-test('production requires the R2 academic resource storage provider', () => {
+test('production rejects local academic resource storage', () => {
   assert.throws(
     () => loadEnv({ ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'local' }),
-    (error) => error.stderr.includes('ACADEMIC_RESOURCE_STORAGE_PROVIDER=r2 in production'),
+    (error) => error.stderr.includes('ACADEMIC_RESOURCE_STORAGE_PROVIDER=r2 or supabase in production'),
   );
 });
 
@@ -35,7 +35,7 @@ test('R2 provider requires all credentials and bucket settings', () => {
   );
 });
 
-test('production R2 configuration starts without local storage directories', () => {
+test('production R2 configuration remains supported without local storage directories', () => {
   assert.equal(loadEnv({
     ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'r2',
     ACADEMIC_RESOURCE_STORAGE_DIR: '',
@@ -44,5 +44,32 @@ test('production R2 configuration starts without local storage directories', () 
     R2_ACCESS_KEY_ID: 'test-access-key',
     R2_SECRET_ACCESS_KEY: 'test-secret-key',
     R2_BUCKET: 'private-files',
+  }), '');
+});
+
+test('Supabase provider requires HTTPS URL, service-role key, and bucket', () => {
+  assert.throws(
+    () => loadEnv({ ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'supabase' }),
+    (error) => error.stderr.includes('Supabase storage requires SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_STORAGE_BUCKET'),
+  );
+  assert.throws(
+    () => loadEnv({
+      ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'supabase',
+      SUPABASE_URL: 'http://project-ref.supabase.co',
+      SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
+      SUPABASE_STORAGE_BUCKET: 'academic-files',
+    }),
+    (error) => error.stderr.includes('SUPABASE_URL must use HTTPS'),
+  );
+});
+
+test('production Supabase configuration starts without local storage directories', () => {
+  assert.equal(loadEnv({
+    ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'supabase',
+    ACADEMIC_RESOURCE_STORAGE_DIR: '',
+    PORTFOLIO_STORAGE_DIR: '',
+    SUPABASE_URL: 'https://project-ref.supabase.co/',
+    SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
+    SUPABASE_STORAGE_BUCKET: 'academic-files',
   }), '');
 });

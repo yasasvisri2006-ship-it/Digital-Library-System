@@ -18,7 +18,7 @@ const envSchema = z.object({
   DEMO_STUDENT_ENABLED: z.enum(['true', 'false']).default('false'),
   DEMO_STUDENT_EMAIL: z.string().email().optional(),
   DEMO_STUDENT_PASSWORD: z.string().min(12).optional(),
-  ACADEMIC_RESOURCE_STORAGE_PROVIDER: z.enum(['local', 'r2']).default('local'),
+  ACADEMIC_RESOURCE_STORAGE_PROVIDER: z.enum(['local', 'r2', 'supabase']).default('local'),
   ACADEMIC_RESOURCE_STORAGE_DIR: optionalNonEmptyString,
   R2_ACCOUNT_ID: z.preprocess(
     (value) => value === '' ? undefined : value,
@@ -27,6 +27,14 @@ const envSchema = z.object({
   R2_ACCESS_KEY_ID: optionalNonEmptyString,
   R2_SECRET_ACCESS_KEY: optionalNonEmptyString,
   R2_BUCKET: optionalNonEmptyString,
+  SUPABASE_URL: z.preprocess(
+    (value) => value === '' ? undefined : value,
+    z.string().url().refine((value) => new URL(value).protocol === 'https:', 'SUPABASE_URL must use HTTPS')
+      .refine((value) => !new URL(value).username && !new URL(value).password, 'SUPABASE_URL must not contain credentials')
+      .optional(),
+  ),
+  SUPABASE_SERVICE_ROLE_KEY: optionalNonEmptyString,
+  SUPABASE_STORAGE_BUCKET: optionalNonEmptyString,
   PORTFOLIO_STORAGE_DIR: optionalNonEmptyString,
   DATABASE_URL: z.string().min(1).refine(
     (value) => value.startsWith('postgresql://') || value.startsWith('postgres://'),
@@ -81,6 +89,9 @@ const env = Object.freeze({
   r2Endpoint: parsedEnv.data.R2_ACCOUNT_ID
     ? `https://${parsedEnv.data.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
     : undefined,
+  supabaseUrl: parsedEnv.data.SUPABASE_URL?.replace(/\/+$/, ''),
+  supabaseServiceRoleKey: parsedEnv.data.SUPABASE_SERVICE_ROLE_KEY,
+  supabaseStorageBucket: parsedEnv.data.SUPABASE_STORAGE_BUCKET,
   portfolioStorageDir: path.resolve(
     parsedEnv.data.PORTFOLIO_STORAGE_DIR
       || path.resolve(__dirname, '../../storage/portfolio'),
@@ -88,8 +99,8 @@ const env = Object.freeze({
   nodeEnv: parsedEnv.data.NODE_ENV,
 });
 
-if (env.nodeEnv === 'production' && env.academicResourceStorageProvider !== 'r2') {
-  throw new Error('Invalid server configuration: private file storage requires ACADEMIC_RESOURCE_STORAGE_PROVIDER=r2 in production');
+if (env.nodeEnv === 'production' && env.academicResourceStorageProvider === 'local') {
+  throw new Error('Invalid server configuration: private file storage requires ACADEMIC_RESOURCE_STORAGE_PROVIDER=r2 or supabase in production');
 }
 
 if (env.academicResourceStorageProvider === 'r2') {
@@ -102,6 +113,18 @@ if (env.academicResourceStorageProvider === 'r2') {
 
   if (missingR2Settings.length > 0) {
     throw new Error(`Invalid server configuration: R2 storage requires ${missingR2Settings.join(', ')}`);
+  }
+}
+
+if (env.academicResourceStorageProvider === 'supabase') {
+  const missingSupabaseSettings = [
+    ['SUPABASE_URL', env.supabaseUrl],
+    ['SUPABASE_SERVICE_ROLE_KEY', env.supabaseServiceRoleKey],
+    ['SUPABASE_STORAGE_BUCKET', env.supabaseStorageBucket],
+  ].filter(([, value]) => !value).map(([name]) => name);
+
+  if (missingSupabaseSettings.length > 0) {
+    throw new Error(`Invalid server configuration: Supabase storage requires ${missingSupabaseSettings.join(', ')}`);
   }
 }
 
