@@ -19,6 +19,7 @@ import { socialLinks } from '../data/socialLinks';
 import { publicDashboardProfile } from '../data/publicDashboardProfile';
 import { useAuth } from '../context/AuthContext';
 import { getProfilePhotoUrl } from '../services/profilePhoto';
+import DashboardLearningResources from '../components/DashboardLearningResources';
 
 function WelcomeBanner() {
   return (
@@ -120,7 +121,6 @@ function StudentIdentityCard() {
           <p><span>Semester:</span><strong>{studentProfile.semester || 'Not provided'}</strong></p>
           <p><span>Student ID:</span><strong>{studentProfile.studentId || 'Not provided'}</strong></p>
         </div>
-        {displayedUser.isDemo && <span className="dashboard-demo-label">DEMO PREVIEW · SAMPLE PROFILE</span>}
       </div>
     </article>
   );
@@ -215,6 +215,7 @@ export default function DashboardPage() {
       </div>
       <main className="ds-dashboard-main">
         <QuickAccessPanel />
+        <DashboardLearningResources />
         <RecentBooksPanel />
       </main>
       <aside className="ds-dashboard-aside" aria-label="Student information">

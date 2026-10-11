@@ -7,9 +7,15 @@ const toolKeys = new Set([
   'numpy',
   'pandas',
   'matplotlib',
+  'seaborn',
+  'scikit-learn',
   'sql',
   'excel',
   'power-bi',
+  'tableau',
+  'git',
+  'github',
+  'vscode',
   'machine-learning',
 ]);
 

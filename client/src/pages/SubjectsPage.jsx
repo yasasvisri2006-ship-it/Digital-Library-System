@@ -7,6 +7,7 @@ import SubjectCard from '../components/SubjectCard';
 import SubjectForm from '../components/SubjectForm';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import EducationalCurriculum from '../components/EducationalCurriculum';
 
 const searchSchema = z.object({ search: z.string().max(120) });
 
@@ -127,6 +128,7 @@ export default function SubjectsPage() {
       </header>
 
       <div className="subjects-note"><Sparkles size={17} /><p><strong>Use your verified course details.</strong> No official syllabus or faculty-approved material is preloaded. Resources and review progress are private to your account.</p></div>
+      <EducationalCurriculum />
 
       <div className="subjects-toolbar">
         <label className="subjects-search"><Search size={17} /><input placeholder="Search subjects and course codes..." {...register('search')} aria-label="Search subjects" /></label>

@@ -29,6 +29,7 @@ const BookDetailPage = lazy(() => import('./pages/BookDetailPage'));
 const BorrowingHistoryPage = lazy(() => import('./pages/BorrowingHistoryPage'));
 const LibraryAdminPage = lazy(() => import('./pages/LibraryAdminPage'));
 const ModulePreviewPage = lazy(() => import('./pages/ModulePreviewPage'));
+const EducationalSectionPage = lazy(() => import('./pages/EducationalSectionPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
@@ -81,7 +82,7 @@ export function AppRoutes() {
             element={<ProtectedRoute allowedRoles={['student']}><ProfilePage /></ProtectedRoute>}
           />
           {modulePaths.map((path) => (
-            <Route key={path} path={path} element={<ModulePreviewPage />} />
+            <Route key={path} path={path} element={<EducationalSectionPage />} />
           ))}
           <Route path="*" element={<NotFoundPage />} />
         </Route>

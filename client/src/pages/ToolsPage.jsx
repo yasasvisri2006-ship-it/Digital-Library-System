@@ -3,6 +3,7 @@ import { ArrowUpRight, CheckCircle2, Wrench } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { learningTools } from '../data/learningTools';
 import api from '../services/api';
+import EducationalCatalogFeed from '../components/EducationalCatalogFeed';
 
 export default function ToolsPage() {
   const [progressByKey, setProgressByKey] = useState({});
@@ -39,6 +40,7 @@ export default function ToolsPage() {
         );
       })}</div>
       <div className="learning-disclaimer"><Wrench size={17} /><p>These guides link to official documentation. This portal does not install, run, or connect to the listed tools.</p></div>
+      <EducationalCatalogFeed section="tools" title="Practical tool examples" description="Small reproducible examples and the official documentation for each tool." />
     </section>
   );
 }

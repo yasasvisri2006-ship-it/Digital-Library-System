@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Award, BookOpen, Check, Cloud, ExternalLink, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import EducationalCatalogFeed from '../components/EducationalCatalogFeed';
 
 const awsResources = [
   { title: 'AWS Skill Builder', description: 'Official digital training and learning plans.', url: 'https://skillbuilder.aws/' },
@@ -150,6 +151,7 @@ export default function CloudLearningPage() {
       {error && <p className="academic-message is-error" role="alert">{error}</p>}
       {message && <p className="academic-message" role="status">{message}</p>}
       <div className="learning-disclaimer"><Cloud size={17} /><p><strong>Learning tracker only.</strong> This portal does not connect to AWS, create cloud resources, run labs, or issue/verify certificates. Use the official AWS site and record your own learning evidence here.</p></div>
+      <EducationalCatalogFeed section="cloud-aws" title="AWS learning notes and safe practice" description="Official AWS service documentation, security concepts, sandbox exercises, and certification preparation." />
 
       {loading ? <div className="academic-loading">Loading your cloud learning records...</div> : <>
         <div className="cloud-learning-grid">

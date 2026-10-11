@@ -63,7 +63,7 @@ after(async () => {
       select: { filePath: true },
     });
     for (const { filePath } of privateFiles) {
-      await unlink(path.resolve(__dirname, '../storage/academic-resources', filePath)).catch((error) => {
+      await unlink(path.resolve(env.academicResourceStorageDir, filePath)).catch((error) => {
         if (error.code !== 'ENOENT') throw error;
       });
     }
@@ -103,6 +103,21 @@ test('GET /api/health returns a healthy API response with security headers', asy
   assert.equal(body.data.service, 'digital-library-api');
   assert.ok(Number.isFinite(Date.parse(body.data.timestamp)));
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+});
+
+test('educational catalog metadata is public while file downloads require a student session', async () => {
+  const catalogResponse = await fetch(`${baseUrl}/api/education?section=subjects`);
+  const catalogBody = await catalogResponse.json();
+
+  assert.equal(catalogResponse.status, 200);
+  assert.equal(catalogBody.success, true);
+  assert.ok(Array.isArray(catalogBody.data.materials));
+  assert.ok(catalogBody.data.materials.every((material) => !Object.hasOwn(material, 'fileKey')));
+  assert.ok(catalogBody.data.materials.every((material) => material.fileUrl === null
+    || material.fileUrl === `/education/${material.slug}/file`));
+
+  const downloadResponse = await fetch(`${baseUrl}/api/education/private-material/file`);
+  assert.equal(downloadResponse.status, 401);
 });
 
 test('public registration is disabled and request validation returns the standard error format', async () => {
@@ -563,6 +578,11 @@ test('only administrators can create student accounts and manage student access'
 });
 
 test('subjects and academic resources support private CRUD, PDF downloads, and review progress', async () => {
+  const unauthenticatedUpload = await fetch(`${baseUrl}/api/subjects/${randomUUID()}/resources/file`, {
+    method: 'POST',
+  });
+  assert.equal(unauthenticatedUpload.status, 401);
+
   const createResponse = await fetch(`${baseUrl}/api/subjects`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', cookie: studentCookie, origin },
@@ -626,13 +646,14 @@ test('subjects and academic resources support private CRUD, PDF downloads, and r
     select: { filePath: true },
   });
   assert.ok(storedResource.filePath);
-  const filePath = path.resolve(__dirname, '../storage/academic-resources', storedResource.filePath);
+  const filePath = path.resolve(env.academicResourceStorageDir, storedResource.filePath);
   await access(filePath);
 
   const downloadResponse = await fetch(`${baseUrl}/api/subjects/resources/${uploadedResource.id}/download`, {
     headers: { cookie: studentCookie, origin },
   });
   assert.equal(downloadResponse.status, 200);
+  assert.equal(downloadResponse.headers.get('cache-control'), 'private, no-store');
   assert.match(downloadResponse.headers.get('content-disposition'), /attachment/);
   assert.match(downloadResponse.headers.get('content-type'), /application\/pdf/);
   assert.deepEqual(Buffer.from(await downloadResponse.arrayBuffer()), pdf);
@@ -667,6 +688,9 @@ test('subjects and academic resources support private CRUD, PDF downloads, and r
 });
 
 test('subject and resource ownership prevents access from other student accounts', async () => {
+  const unauthenticatedDownload = await fetch(`${baseUrl}/api/subjects/resources/${randomUUID()}/download`);
+  assert.equal(unauthenticatedDownload.status, 401);
+
   const otherUser = await prisma.user.create({
     data: {
       name: 'Other Test Student',

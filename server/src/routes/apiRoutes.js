@@ -8,6 +8,7 @@ const portfolioRoutes = require('./portfolioRoutes');
 const publicPortfolioRoutes = require('./publicPortfolioRoutes');
 const libraryRoutes = require('./libraryRoutes');
 const adminRoutes = require('./adminRoutes');
+const educationalMaterialRoutes = require('./educationalMaterialRoutes');
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use('/portfolio', portfolioRoutes);
 router.use('/public/portfolio', publicPortfolioRoutes);
 router.use('/library', libraryRoutes);
 router.use('/admin', adminRoutes);
+router.use('/education', educationalMaterialRoutes);
 
 module.exports = router;

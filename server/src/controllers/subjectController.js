@@ -69,9 +69,9 @@ async function downloadResource(req, res, next) {
       'Content-Type': 'application/pdf',
       'X-Content-Type-Options': 'nosniff',
     });
-    res.download(file.path, file.fileName, (error) => {
-      if (error) next(error);
-    });
+    res.attachment(file.fileName);
+    file.stream.on('error', next);
+    file.stream.pipe(res);
   } catch (error) {
     next(error);
   }

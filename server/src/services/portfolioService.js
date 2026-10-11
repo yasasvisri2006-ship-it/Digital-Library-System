@@ -1,8 +1,8 @@
 const path = require('node:path');
-const { mkdir, unlink, writeFile } = require('node:fs/promises');
 const { randomBytes, randomUUID } = require('node:crypto');
 const { env } = require('../config/env');
 const { prisma } = require('../config/prisma');
+const privateFileStorage = require('./privateFileStorage');
 const { ApiError } = require('../utils/ApiError');
 
 const imageTypes = [
@@ -10,14 +10,6 @@ const imageTypes = [
   { mimeType: 'image/png', extension: 'png', matches: (buffer) => buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) },
   { mimeType: 'image/webp', extension: 'webp', matches: (buffer) => buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP' },
 ];
-
-function safeFilePath(relativePath) {
-  const absolutePath = path.resolve(env.portfolioStorageDir, relativePath);
-  if (!absolutePath.startsWith(`${env.portfolioStorageDir}${path.sep}`)) {
-    throw new ApiError(404, 'Portfolio file not found.');
-  }
-  return absolutePath;
-}
 
 function safeName(originalName, fallback) {
   return path.basename(originalName).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 180) || fallback;
@@ -100,9 +92,7 @@ async function saveProjectScreenshot(ownerId, projectId, file) {
   const project = await prisma.project.findFirst({ where: { id: projectId, ownerId }, select: { id: true } });
   if (!project) throw new ApiError(404, 'Project not found.');
   const filePath = `${ownerId}/projects/${randomUUID()}.${imageType.extension}`;
-  const absolutePath = safeFilePath(filePath);
-  await mkdir(path.dirname(absolutePath), { recursive: true });
-  await writeFile(absolutePath, file.buffer, { flag: 'wx', mode: 0o600 });
+  await privateFileStorage.store(env.portfolioStorageDir, filePath, file.buffer, imageType.mimeType);
   try {
     const screenshot = await prisma.projectScreenshot.create({
       data: {
@@ -123,8 +113,8 @@ async function saveProjectScreenshot(ownerId, projectId, file) {
       url: `/portfolio/projects/${projectId}/screenshots/${screenshot.id}`,
     };
   } catch (error) {
-    await unlink(absolutePath).catch((cleanupError) => {
-      if (cleanupError.code !== 'ENOENT') console.error('Unable to clean up a failed project screenshot upload', cleanupError);
+    await privateFileStorage.remove(env.portfolioStorageDir, filePath).catch((cleanupError) => {
+      console.error('Unable to clean up a failed project screenshot upload', cleanupError);
     });
     throw error;
   }
@@ -136,7 +126,7 @@ async function getProjectScreenshot(ownerId, projectId, screenshotId) {
     select: { filePath: true, fileName: true, mimeType: true },
   });
   if (!screenshot) throw new ApiError(404, 'Project screenshot not found.');
-  return { ...screenshot, path: safeFilePath(screenshot.filePath) };
+  return { ...screenshot, stream: await privateFileStorage.open(env.portfolioStorageDir, screenshot.filePath) };
 }
 
 async function getPublicProjectScreenshot(slug, projectId, screenshotId) {
@@ -149,7 +139,7 @@ async function getPublicProjectScreenshot(slug, projectId, screenshotId) {
     select: { filePath: true, fileName: true, mimeType: true },
   });
   if (!screenshot) throw new ApiError(404, 'Public portfolio screenshot not found.');
-  return { ...screenshot, path: safeFilePath(screenshot.filePath) };
+  return { ...screenshot, stream: await privateFileStorage.open(env.portfolioStorageDir, screenshot.filePath) };
 }
 
 async function deleteProjectScreenshot(ownerId, projectId, screenshotId) {
@@ -164,8 +154,8 @@ async function deleteProjectScreenshot(ownerId, projectId, screenshotId) {
 
 async function removeFiles(relativePaths) {
   for (const relativePath of relativePaths) {
-    await unlink(safeFilePath(relativePath)).catch((error) => {
-      if (error.code !== 'ENOENT') console.error('Unable to remove a private portfolio file', error);
+    await privateFileStorage.remove(env.portfolioStorageDir, relativePath).catch((error) => {
+      console.error('Unable to remove a private portfolio file', error);
     });
   }
 }
@@ -266,9 +256,7 @@ async function uploadCertificateFile(ownerId, certificateId, file) {
   });
   if (!certificate) throw new ApiError(404, 'Certificate not found.');
   const filePath = `${ownerId}/certificates/${randomUUID()}.pdf`;
-  const absolutePath = safeFilePath(filePath);
-  await mkdir(path.dirname(absolutePath), { recursive: true });
-  await writeFile(absolutePath, file.buffer, { flag: 'wx', mode: 0o600 });
+  await privateFileStorage.store(env.portfolioStorageDir, filePath, file.buffer, 'application/pdf');
   try {
     const updated = await prisma.certificate.update({
       where: { id: certificateId },
@@ -292,7 +280,7 @@ async function getCertificateFile(ownerId, certificateId) {
     select: { filePath: true, fileName: true },
   });
   if (!certificate) throw new ApiError(404, 'Certificate file not found.');
-  return { ...certificate, path: safeFilePath(certificate.filePath) };
+  return { ...certificate, stream: await privateFileStorage.open(env.portfolioStorageDir, certificate.filePath) };
 }
 
 async function getPublicCertificateFile(slug, certificateId) {
@@ -306,7 +294,7 @@ async function getPublicCertificateFile(slug, certificateId) {
     select: { filePath: true, fileName: true },
   });
   if (!certificate) throw new ApiError(404, 'Public certificate file not found.');
-  return { ...certificate, path: safeFilePath(certificate.filePath) };
+  return { ...certificate, stream: await privateFileStorage.open(env.portfolioStorageDir, certificate.filePath) };
 }
 
 async function deleteCertificate(ownerId, certificateId) {

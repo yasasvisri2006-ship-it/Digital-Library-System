@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, Bookmark, Check, Circle, Code2, Filter, Pencil, Plus, Search, Trash2, Trophy } from 'lucide-react';
 import CodingProblemForm from '../components/CodingProblemForm';
 import api from '../services/api';
+import EducationalCatalogFeed from '../components/EducationalCatalogFeed';
 
 const languageLabels = {
   PYTHON: 'Python',
@@ -117,6 +118,7 @@ export default function CodingPracticePage() {
       </header>
 
       <div className="learning-disclaimer"><Code2 size={17} /><p><strong>Practice tracker only.</strong> This portal does not execute code or connect to an external compiler. Use a trusted local or sandboxed environment for code execution; never run untrusted code on an application server.</p></div>
+      <EducationalCatalogFeed section="coding-practice" title="Guided problem bank" description="Beginner-to-intermediate Python, C, C++, Java, SQL, data-structure, and algorithm problems with solution explanations." />
       {pageError && <p className="academic-message is-error" role="alert">{pageError}</p>}
       {message && <p className="academic-message" role="status">{message}</p>}
 

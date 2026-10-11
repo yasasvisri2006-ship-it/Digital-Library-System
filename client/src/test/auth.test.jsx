@@ -125,7 +125,7 @@ describe('authentication screens', () => {
 
     expect(await screen.findByRole('heading', { name: /Data Science Library/i })).toBeInTheDocument();
     expect(screen.getByText('Peta Yasasvisri')).toBeInTheDocument();
-    expect(screen.getByText('DEMO PREVIEW · SAMPLE PROFILE')).toBeInTheDocument();
+    expect(screen.queryByText('DEMO PREVIEW · SAMPLE PROFILE')).not.toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Peta Yasasvisri profile' })).toHaveAttribute('src', '/images/student-photo.png');
     expect(screen.getByText('CSE (DS)')).toBeInTheDocument();
     expect(screen.getByText('Data Science')).toBeInTheDocument();

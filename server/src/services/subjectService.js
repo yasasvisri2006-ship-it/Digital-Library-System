@@ -1,6 +1,6 @@
 const path = require('node:path');
-const { access, mkdir, unlink, writeFile } = require('node:fs/promises');
 const { randomUUID } = require('node:crypto');
+const privateFileStorage = require('./privateFileStorage');
 const { env } = require('../config/env');
 const { prisma } = require('../config/prisma');
 const { ApiError } = require('../utils/ApiError');
@@ -58,14 +58,6 @@ function resourceInclude(ownerId) {
       select: { id: true, isReviewed: true },
     },
   };
-}
-
-function storagePathFor(relativePath) {
-  const resolved = path.resolve(env.academicResourceStorageDir, relativePath);
-  if (!resolved.startsWith(`${env.academicResourceStorageDir}${path.sep}`)) {
-    throw new ApiError(404, 'Academic resource file was not found.');
-  }
-  return resolved;
 }
 
 async function listSubjects(userId, { search, semester } = {}) {
@@ -217,10 +209,8 @@ async function saveResourceFile(userId, subjectId, input, file) {
   if (!subject) throw new ApiError(404, 'Subject not found.');
 
   const filePath = `${randomUUID()}.pdf`;
-  const absolutePath = storagePathFor(filePath);
   const fileName = path.basename(file.originalname).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 180) || 'academic-resource.pdf';
-  await mkdir(env.academicResourceStorageDir, { recursive: true });
-  await writeFile(absolutePath, file.buffer, { flag: 'wx', mode: 0o600 });
+  await privateFileStorage.store(env.academicResourceStorageDir, filePath, file.buffer, 'application/pdf');
   try {
     const resource = await prisma.academicResource.create({
       data: {
@@ -236,8 +226,8 @@ async function saveResourceFile(userId, subjectId, input, file) {
     });
     return resourceResponse(resource);
   } catch (error) {
-    await unlink(absolutePath).catch((cleanupError) => {
-      if (cleanupError.code !== 'ENOENT') console.error('Unable to remove failed academic resource upload', cleanupError);
+    await privateFileStorage.remove(env.academicResourceStorageDir, filePath).catch((cleanupError) => {
+      console.error('Unable to remove failed academic resource upload', cleanupError);
     });
     throw error;
   }
@@ -277,14 +267,8 @@ async function getDownload(userId, resourceId) {
     select: { filePath: true, fileName: true },
   });
   if (!resource) throw new ApiError(404, 'Academic resource file not found.');
-  const filePath = storagePathFor(resource.filePath);
-  try {
-    await access(filePath);
-  } catch (error) {
-    if (error.code === 'ENOENT') throw new ApiError(404, 'Academic resource file not found.');
-    throw error;
-  }
-  return { path: filePath, fileName: resource.fileName || 'academic-resource.pdf' };
+  const stream = await privateFileStorage.open(env.academicResourceStorageDir, resource.filePath);
+  return { stream, fileName: resource.fileName || 'academic-resource.pdf' };
 }
 
 async function deleteResource(userId, resourceId) {
@@ -300,9 +284,10 @@ async function deleteResource(userId, resourceId) {
 async function removeStoredFiles(filePaths) {
   for (const filePath of filePaths.filter(Boolean)) {
     try {
-      await unlink(storagePathFor(filePath));
+      await privateFileStorage.remove(env.academicResourceStorageDir, filePath);
     } catch (error) {
-      if (error.code !== 'ENOENT') console.error('Unable to remove deleted academic resource file', error);
+      console.error('Unable to remove deleted academic resource file', error);
+      throw error;
     }
   }
 }

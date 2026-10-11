@@ -33,7 +33,8 @@ async function getProjectScreenshot(req, res, next) {
   try {
     const screenshot = await portfolioService.getProjectScreenshot(req.auth.id, req.params.projectId, req.params.screenshotId);
     res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' });
-    res.type(screenshot.mimeType).sendFile(screenshot.path, (error) => { if (error) next(error); });
+    res.type(screenshot.mimeType);
+    screenshot.stream.on('error', next).pipe(res);
   } catch (error) {
     next(error);
   }
@@ -93,7 +94,8 @@ async function getCertificateFile(req, res, next) {
       'Content-Type': 'application/pdf',
       'X-Content-Type-Options': 'nosniff',
     });
-    res.download(file.path, file.fileName, (error) => { if (error) next(error); });
+    res.attachment(file.fileName);
+    file.stream.on('error', next).pipe(res);
   } catch (error) {
     next(error);
   }
@@ -154,7 +156,8 @@ async function getPublicProjectScreenshot(req, res, next) {
   try {
     const screenshot = await portfolioService.getPublicProjectScreenshot(req.params.slug, req.params.projectId, req.params.screenshotId);
     res.set({ 'Cache-Control': 'public, max-age=300', 'X-Content-Type-Options': 'nosniff' });
-    res.type(screenshot.mimeType).sendFile(screenshot.path, (error) => { if (error) next(error); });
+    res.type(screenshot.mimeType);
+    screenshot.stream.on('error', next).pipe(res);
   } catch (error) {
     next(error);
   }
@@ -172,7 +175,8 @@ async function getPublicCertificateFile(req, res, next) {
       'Content-Type': 'application/pdf',
       'X-Content-Type-Options': 'nosniff',
     });
-    res.download(file.path, file.fileName, (error) => { if (error) next(error); });
+    res.attachment(file.fileName);
+    file.stream.on('error', next).pipe(res);
   } catch (error) {
     next(error);
   }
