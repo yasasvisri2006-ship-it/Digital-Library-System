@@ -1,6 +1,7 @@
 const { after, before, test } = require('node:test');
 const assert = require('node:assert/strict');
 const jwt = require('jsonwebtoken');
+const { Readable } = require('node:stream');
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/digital_library_test';
@@ -11,6 +12,7 @@ const { records } = require('../src/data/educationalMaterials');
 const { prisma } = require('../src/config/prisma');
 const { env } = require('../src/config/env');
 const app = require('../src/app');
+const privateFileStorage = require('../src/services/privateFileStorage');
 
 const testUser = {
   id: '00000000-0000-4000-8000-000000000099',
@@ -27,6 +29,8 @@ let server;
 let baseUrl;
 const originalFindUnique = prisma.user.findUnique;
 const originalFindMany = prisma.educationalMaterial.findMany;
+const originalMaterialFindUnique = prisma.educationalMaterial.findUnique;
+const originalOpen = privateFileStorage.open;
 
 before(async () => {
   prisma.user.findUnique = async ({ select }) => (
@@ -62,6 +66,16 @@ before(async () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     }));
+  prisma.educationalMaterial.findUnique = async ({ where }) => (
+    where.slug === 'slides-python-foundations'
+      ? {
+        fileKey: 'catalog/00000000-0000-4000-8000-000000000001.pptx',
+        fileName: 'python-foundations.pptx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      }
+      : null
+  );
+  privateFileStorage.open = async () => Readable.from([Buffer.from('private-bucket-file-through-api')]);
 
   server = app.listen(0);
   await new Promise((resolve, reject) => {
@@ -74,6 +88,8 @@ before(async () => {
 after(async () => {
   prisma.user.findUnique = originalFindUnique;
   prisma.educationalMaterial.findMany = originalFindMany;
+  prisma.educationalMaterial.findUnique = originalMaterialFindUnique;
+  privateFileStorage.open = originalOpen;
   if (server) {
     server.closeAllConnections();
     await new Promise((resolve, reject) => {
@@ -102,7 +118,21 @@ test('/api/auth/me is mounted and still verifies the authenticated session', asy
 });
 
 test('/api/education serves populated My Learning and Lab Experiments sections', async () => {
-  for (const [section, expectedCount] of [['my-learning', 7], ['lab-experiments', 10]]) {
+  const expectedCounts = new Map([
+    ['subjects', 18],
+    ['modules', 54],
+    ['my-learning', 7],
+    ['lab-experiments', 10],
+    ['tools', 13],
+    ['cloud-aws', 10],
+    ['study-materials', 22],
+    ['references', 19],
+    ['datasets', 5],
+    ['assignments', 18],
+    ['coding-practice', 18],
+    ['quizzes-tests', 4],
+  ]);
+  for (const [section, expectedCount] of expectedCounts) {
     const response = await fetch(`${baseUrl}/api/education?section=${section}`);
     const body = await response.json();
 
@@ -112,4 +142,56 @@ test('/api/education serves populated My Learning and Lab Experiments sections',
     assert.ok(body.data.materials.every((material) => material.section === section));
     assert.ok(body.data.materials.every((material) => !Object.hasOwn(material, 'fileKey')));
   }
+});
+
+test('/api/education falls back to authored metadata if its migration is missing', async () => {
+  const originalFindMany = prisma.educationalMaterial.findMany;
+  prisma.educationalMaterial.findMany = async () => {
+    const error = new Error('EducationalMaterial table does not exist.');
+    error.code = 'P2021';
+    throw error;
+  };
+  try {
+    const response = await fetch(`${baseUrl}/api/education?section=my-learning`);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.data.materials.length, 7);
+    assert.ok(body.data.materials.every((material) => material.fileUrl === null));
+  } finally {
+    prisma.educationalMaterial.findMany = originalFindMany;
+  }
+});
+
+test('/api/education serves seeded catalog files without exposing storage keys', async () => {
+  const response = await fetch(`${baseUrl}/api/education/slides-python-foundations/file`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-disposition'), /python-foundations\.pptx/);
+  assert.equal(response.headers.get('cache-control'), 'private, no-store');
+  assert.equal(await response.text(), 'private-bucket-file-through-api');
+});
+
+test('/api/education does not expose keys outside the catalog object prefix', async () => {
+  const originalFindUnique = prisma.educationalMaterial.findUnique;
+  prisma.educationalMaterial.findUnique = async () => ({
+    fileKey: '00000000-0000-4000-8000-000000000001.pdf',
+    fileName: 'private-resource.pdf',
+    mimeType: 'application/pdf',
+  });
+  try {
+    const response = await fetch(`${baseUrl}/api/education/slides-python-foundations/file`);
+    assert.equal(response.status, 404);
+  } finally {
+    prisma.educationalMaterial.findUnique = originalFindUnique;
+  }
+});
+
+test('personal subjects and account-management routes remain protected', async () => {
+  const [subjectsResponse, subjectDeleteResponse, adminResponse] = await Promise.all([
+    fetch(`${baseUrl}/api/subjects`),
+    fetch(`${baseUrl}/api/subjects/00000000-0000-4000-8000-000000000001`, { method: 'DELETE' }),
+    fetch(`${baseUrl}/api/admin/users`),
+  ]);
+  assert.equal(subjectsResponse.status, 401);
+  assert.equal(subjectDeleteResponse.status, 401);
+  assert.equal(adminResponse.status, 401);
 });

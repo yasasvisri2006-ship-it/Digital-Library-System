@@ -36,6 +36,12 @@ export default function SubjectsPage() {
   const search = watch('search');
 
   const loadSubjects = useCallback(async (signal) => {
+    if (!user) {
+      setSubjects([]);
+      setPageError('');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setPageError('');
     try {
@@ -49,7 +55,7 @@ export default function SubjectsPage() {
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, [search, semester]);
+  }, [search, semester, user]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -121,15 +127,16 @@ export default function SubjectsPage() {
     <section className="subjects-page">
       <header className="academic-page-heading">
         <span className="academic-title-icon"><BookOpen size={20} /></span>
-        <div><span>YOUR LEARNING SPACE</span><h1>My Subjects</h1><p>{user.studentProfile?.program || 'Your program'}{user.studentProfile?.department ? ` · ${user.studentProfile.department}` : ''}</p></div>
-        <button className="academic-button heading-action" type="button" onClick={() => { setModalSubject(null); setModalOpen(true); }}>
+        <div><span>YOUR LEARNING SPACE</span><h1>My Subjects</h1><p>{user ? `${user.studentProfile?.program || 'Your program'}${user.studentProfile?.department ? ` · ${user.studentProfile.department}` : ''}` : 'Browse the public Data Science learning curriculum.'}</p></div>
+        {user && <button className="academic-button heading-action" type="button" onClick={() => { setModalSubject(null); setModalOpen(true); }}>
           <Plus size={17} /> Add subject
-        </button>
+        </button>}
       </header>
 
-      <div className="subjects-note"><Sparkles size={17} /><p><strong>Use your verified course details.</strong> No official syllabus or faculty-approved material is preloaded. Resources and review progress are private to your account.</p></div>
+      {user && <div className="subjects-note"><Sparkles size={17} /><p><strong>Use your verified course details.</strong> No official syllabus or faculty-approved material is preloaded. Resources and review progress are private to your account.</p></div>}
       <EducationalCurriculum />
 
+      {user && <>
       <div className="subjects-toolbar">
         <label className="subjects-search"><Search size={17} /><input placeholder="Search subjects and course codes..." {...register('search')} aria-label="Search subjects" /></label>
         <select value={semester} onChange={(event) => setSemester(event.target.value)} aria-label="Filter by semester">
@@ -161,6 +168,7 @@ export default function SubjectsPage() {
 
       {subjects.length > 0 && <button className="add-demo-subjects" type="button" onClick={addDemoSubjects} disabled={saving}><Sparkles size={15} /> {saving ? 'Adding...' : 'Add optional demo placeholders'}</button>}
       {modalOpen && <SubjectForm subject={modalSubject} onClose={() => setModalOpen(false)} onSave={saveSubject} saving={saving} error={pageError} />}
+      </>}
     </section>
   );
 }

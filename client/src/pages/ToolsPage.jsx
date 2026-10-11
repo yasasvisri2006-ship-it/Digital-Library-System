@@ -4,12 +4,15 @@ import { Link } from 'react-router-dom';
 import { learningTools } from '../data/learningTools';
 import api from '../services/api';
 import EducationalCatalogFeed from '../components/EducationalCatalogFeed';
+import { useAuth } from '../context/AuthContext';
 
 export default function ToolsPage() {
+  const { user } = useAuth();
   const [progressByKey, setProgressByKey] = useState({});
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!user) return undefined;
     const controller = new AbortController();
     api.get('/learning/tools', { signal: controller.signal })
       .then(({ data }) => setProgressByKey(Object.fromEntries(data.data.progress.map((progress) => [progress.toolKey, progress]))))
@@ -17,7 +20,7 @@ export default function ToolsPage() {
         if (requestError.name !== 'CanceledError') setError(requestError.response?.data?.message || 'Learning progress could not be loaded.');
       });
     return () => controller.abort();
-  }, []);
+  }, [user]);
 
   return (
     <section className="learning-page">

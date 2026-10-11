@@ -61,10 +61,10 @@ export function AppRoutes() {
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/users/create" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/modules" element={<ModulesPage />} />
-          <Route path="/coding-practice" element={<ProtectedRoute allowedRoles={['student']}><CodingPracticePage /></ProtectedRoute>} />
-          <Route path="/tools" element={<ProtectedRoute allowedRoles={['student']}><ToolsPage /></ProtectedRoute>} />
-          <Route path="/tools/:toolKey" element={<ProtectedRoute allowedRoles={['student']}><ToolDetailPage /></ProtectedRoute>} />
-          <Route path="/cloud-aws" element={<ProtectedRoute allowedRoles={['student']}><CloudLearningPage /></ProtectedRoute>} />
+          <Route path="/coding-practice" element={<CodingPracticePage />} />
+          <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/tools/:toolKey" element={<ToolDetailPage />} />
+          <Route path="/cloud-aws" element={<CloudLearningPage />} />
           <Route path="/projects" element={<ProtectedRoute allowedRoles={['student']}><ProjectsPage /></ProtectedRoute>} />
           <Route path="/my-resume" element={<ProtectedRoute allowedRoles={['student']}><ResumePage /></ProtectedRoute>} />
           <Route path="/certificates" element={<ProtectedRoute allowedRoles={['student']}><CertificatesPage /></ProtectedRoute>} />
@@ -73,7 +73,7 @@ export function AppRoutes() {
           <Route path="/digital-library/books/:bookId" element={<BookDetailPage />} />
           <Route path="/library/my-borrowing" element={<ProtectedRoute allowedRoles={['student']}><BorrowingHistoryPage /></ProtectedRoute>} />
           <Route path="/library/admin" element={<ProtectedRoute allowedRoles={['admin']}><LibraryAdminPage /></ProtectedRoute>} />
-          <Route path="/my-subjects" element={<ProtectedRoute allowedRoles={['student']}><SubjectsPage /></ProtectedRoute>} />
+          <Route path="/my-subjects" element={<SubjectsPage />} />
           <Route path="/my-subjects/:subjectId" element={<ProtectedRoute allowedRoles={['student']}><SubjectDetailPage /></ProtectedRoute>} />
           <Route path="/quick-access" element={<QuickAccessPage />} />
           <Route path="/search" element={<SearchPage />} />

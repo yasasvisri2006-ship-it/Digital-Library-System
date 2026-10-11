@@ -3,6 +3,7 @@ import { ArrowUpRight, Bookmark, Check, Circle, Code2, Filter, Pencil, Plus, Sea
 import CodingProblemForm from '../components/CodingProblemForm';
 import api from '../services/api';
 import EducationalCatalogFeed from '../components/EducationalCatalogFeed';
+import { useAuth } from '../context/AuthContext';
 
 const languageLabels = {
   PYTHON: 'Python',
@@ -31,6 +32,7 @@ function activityLabel(type) {
 }
 
 export default function CodingPracticePage() {
+  const { user } = useAuth();
   const [problems, setProblems] = useState([]);
   const [progress, setProgress] = useState({ totalCount: 0, completedCount: 0, bookmarkedCount: 0, completionPercent: 0 });
   const [history, setHistory] = useState([]);
@@ -43,6 +45,13 @@ export default function CodingPracticePage() {
   const [formOpen, setFormOpen] = useState(false);
 
   const load = useCallback(async (signal) => {
+    if (!user) {
+      setProblems([]);
+      setHistory([]);
+      setProgress({ totalCount: 0, completedCount: 0, bookmarkedCount: 0, completionPercent: 0 });
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setPageError('');
     try {
@@ -59,7 +68,7 @@ export default function CodingPracticePage() {
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, [filters]);
+  }, [filters, user]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -114,11 +123,12 @@ export default function CodingPracticePage() {
       <header className="learning-page-heading">
         <span className="learning-title-icon"><Code2 size={21} /></span>
         <div><span className="section-eyebrow">BUILD A STEADY HABIT</span><h1>Coding Practice</h1><p>Keep problem statements, solution notes, bookmarks, and completed work together.</p></div>
-        <button className="learning-button learning-heading-action" type="button" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus size={17} /> Add problem</button>
+        {user && <button className="learning-button learning-heading-action" type="button" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus size={17} /> Add problem</button>}
       </header>
 
       <div className="learning-disclaimer"><Code2 size={17} /><p><strong>Practice tracker only.</strong> This portal does not execute code or connect to an external compiler. Use a trusted local or sandboxed environment for code execution; never run untrusted code on an application server.</p></div>
       <EducationalCatalogFeed section="coding-practice" title="Guided problem bank" description="Beginner-to-intermediate Python, C, C++, Java, SQL, data-structure, and algorithm problems with solution explanations." />
+      {user && <>
       {pageError && <p className="academic-message is-error" role="alert">{pageError}</p>}
       {message && <p className="academic-message" role="status">{message}</p>}
 
@@ -163,6 +173,7 @@ export default function CodingPracticePage() {
         </aside>
       </div>
       {formOpen && <CodingProblemForm problem={editing} onClose={() => setFormOpen(false)} onSave={saveProblem} saving={saving} />}
+      </>}
     </section>
   );
 }

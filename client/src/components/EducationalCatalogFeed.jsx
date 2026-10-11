@@ -28,7 +28,9 @@ export default function EducationalCatalogFeed({ section, title, description }) 
         <div><span className="section-eyebrow">CURATED LEARNING CONTENT</span><h2>{title}</h2><p>{description}</p></div>
       </header>
       {error && <p className="academic-message is-error" role="alert">{error}</p>}
-      {loading ? <div className="academic-loading">Loading learning resources...</div> : <EducationalMaterialGrid materials={materials} />}
+      {loading ? <div className="academic-loading">Loading learning resources...</div> : materials.length
+        ? <EducationalMaterialGrid materials={materials} />
+        : <div className="learning-panel"><h3>No resources are available in this section yet.</h3><p>Try another learning section or check back after the catalog is populated.</p></div>}
     </section>
   );
 }

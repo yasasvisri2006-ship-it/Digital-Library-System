@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowUpRight, Award, BookOpen, Check, Cloud, ExternalLink, P
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import EducationalCatalogFeed from '../components/EducationalCatalogFeed';
+import { useAuth } from '../context/AuthContext';
 
 const awsResources = [
   { title: 'AWS Skill Builder', description: 'Official digital training and learning plans.', url: 'https://skillbuilder.aws/' },
@@ -15,6 +16,7 @@ function responseMessage(error) {
 }
 
 export default function CloudLearningPage() {
+  const { user } = useAuth();
   const [progress, setProgress] = useState({ notes: '', percentComplete: 0, isCompleted: false });
   const [labNotes, setLabNotes] = useState([]);
   const [certificates, setCertificates] = useState([]);
@@ -42,10 +44,14 @@ export default function CloudLearningPage() {
   }
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return undefined;
+    }
     const controller = new AbortController();
     load(controller.signal);
     return () => controller.abort();
-  }, []);
+  }, [user]);
 
   async function saveProgress() {
     setSaving(true);
@@ -153,7 +159,7 @@ export default function CloudLearningPage() {
       <div className="learning-disclaimer"><Cloud size={17} /><p><strong>Learning tracker only.</strong> This portal does not connect to AWS, create cloud resources, run labs, or issue/verify certificates. Use the official AWS site and record your own learning evidence here.</p></div>
       <EducationalCatalogFeed section="cloud-aws" title="AWS learning notes and safe practice" description="Official AWS service documentation, security concepts, sandbox exercises, and certification preparation." />
 
-      {loading ? <div className="academic-loading">Loading your cloud learning records...</div> : <>
+      {user && (loading ? <div className="academic-loading">Loading your cloud learning records...</div> : <>
         <div className="cloud-learning-grid">
           <section className="learning-panel cloud-progress-card">
             <div className="learning-panel-heading"><div><span className="section-eyebrow">YOUR SAVED PROGRESS</span><h2>AWS course progress</h2></div><Cloud size={18} /></div>
@@ -190,7 +196,7 @@ export default function CloudLearningPage() {
           </form>
           {certificates.length ? <div className="cloud-certificate-list">{certificates.map((certificate) => <article key={certificate.id}><span className="certificate-record-icon"><Award size={17} /></span><div><h3>{certificate.title}</h3><p>{certificate.issuer || 'Issuer not set'}{certificate.issuedAt ? ` · ${new Date(certificate.issuedAt).toLocaleDateString()}` : ''}</p>{certificate.credentialUrl && <a href={certificate.credentialUrl} target="_blank" rel="noreferrer">View credential <ExternalLink size={13} /></a>}</div><button type="button" aria-label={`Delete ${certificate.title}`} onClick={() => deleteCertificate(certificate)}><Trash2 size={15} /></button></article>)}</div> : <p className="learning-muted">No AWS certificate records saved yet.</p>}
         </section>
-      </>}
+      </>)}
     </section>
   );
 }

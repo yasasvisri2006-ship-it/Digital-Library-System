@@ -85,7 +85,7 @@ export function EducationalMaterialCard({ material, showSection = false, compact
       document.body.append(anchor);
       anchor.click();
       anchor.remove();
-      URL.revokeObjectURL(objectUrl);
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } catch (error) {
       setDownloadError(error.response?.status === 401 || error.response?.status === 403
         ? 'Sign in with your student account to download this file.'
