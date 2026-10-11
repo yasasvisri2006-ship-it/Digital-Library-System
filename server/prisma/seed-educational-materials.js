@@ -1,10 +1,18 @@
 const { prisma } = require('../src/config/prisma');
 const { seedCatalog } = require('../src/services/educationalMaterialService');
+const { records } = require('../src/data/educationalMaterials');
 
 async function main() {
   await prisma.$connect();
   const count = await seedCatalog();
-  console.log(`Seeded ${count} educational catalog records and uploaded packaged resources.`);
+  const sectionCounts = records.reduce((counts, { section }) => {
+    counts[section] = (counts[section] || 0) + 1;
+    return counts;
+  }, {});
+  console.log(`Upserted ${count} educational catalog records and uploaded packaged resources.`);
+  for (const [section, sectionCount] of Object.entries(sectionCounts).sort(([left], [right]) => left.localeCompare(right))) {
+    console.log(`  ${section}: ${sectionCount}`);
+  }
 }
 
 main()

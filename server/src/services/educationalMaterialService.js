@@ -44,13 +44,26 @@ async function getDownload(slug) {
 
 async function seedCatalog() {
   const { records } = require('../data/educationalMaterials');
+  const slugs = new Set();
+  for (const record of records) {
+    if (slugs.has(record.slug)) {
+      throw new Error(`Educational catalog contains duplicate slug "${record.slug}".`);
+    }
+    slugs.add(record.slug);
+  }
+
+  const assetBuffers = new Map();
+  for (const record of records) {
+    if (record.localPath) assetBuffers.set(record.slug, await readFile(record.localPath));
+  }
+
   for (const [index, record] of records.entries()) {
     const fileKey = record.localPath
       ? objectKeyFor(record.slug, path.extname(record.fileName).slice(1))
       : null;
     let fileSize = null;
     if (record.localPath) {
-      const buffer = await readFile(record.localPath);
+      const buffer = assetBuffers.get(record.slug);
       fileSize = buffer.length;
       await privateFileStorage.store(
         env.academicResourceStorageDir,

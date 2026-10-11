@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { normalizeApiBaseUrl } from './apiBaseUrl';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_URL),
   withCredentials: true,
   headers: { Accept: 'application/json' },
 });

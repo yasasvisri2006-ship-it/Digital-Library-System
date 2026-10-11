@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { AuthProvider } from '../context/AuthContext';
 import api from '../services/api';
+import { normalizeApiBaseUrl } from '../services/apiBaseUrl';
 
 vi.mock('../services/api', () => ({
   default: { get: vi.fn(), post: vi.fn() },
@@ -14,6 +15,16 @@ afterEach(cleanup);
 describe('authentication session restoration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('normalizes a Render backend origin to the API mount path', () => {
+    expect(normalizeApiBaseUrl('https://digital-library-api.onrender.com')).toBe(
+      'https://digital-library-api.onrender.com/api',
+    );
+    expect(normalizeApiBaseUrl('https://digital-library-api.onrender.com/api/')).toBe(
+      'https://digital-library-api.onrender.com/api',
+    );
+    expect(normalizeApiBaseUrl(undefined)).toBe('http://localhost:5000/api');
   });
 
   it('restores an administrator from the current-user endpoint before rendering an admin route', async () => {

@@ -29,7 +29,7 @@ The frontend is the React/Vite app in `client` (not the Express API package). Co
 | Build Command | `npm ci && npm run build` |
 | Publish Directory | `dist` |
 
-Set `VITE_API_URL` in the Render site environment to the deployed API base URL, including `/api` (for example, `https://your-api-service.onrender.com/api`). This value is public frontend configuration; do not put database credentials, JWT secrets, or other private values in `VITE_` variables. If it is omitted, the frontend's development fallback points to `http://localhost:5000/api`, which is not suitable for a deployed site.
+Set `VITE_API_URL` in the Render site environment to the deployed API origin (for example, `https://your-api-service.onrender.com`); the client appends `/api` automatically, and avoids duplicating it if the value already ends in `/api`. This value is public frontend configuration; do not put database credentials, JWT secrets, or other private values in `VITE_` variables. If it is omitted, the frontend's development fallback points to `http://localhost:5000/api`, which is not suitable for a deployed site.
 
 Add a rewrite rule in the Render Static Site dashboard so client-side routes such as `/digital-library` work on direct navigation and refresh:
 
@@ -146,9 +146,20 @@ npm.cmd --prefix server run education:generate
 npm.cmd --prefix server run education:seed
 ```
 
-For Render, keep the Web Service on the Free plan and configure the private object-storage bucket and environment variables in the provider instructions above. Apply the migration with `db:migrate:deploy`; then run `education:seed` once from a trusted machine or one-off process configured with the same production `DATABASE_URL` and storage-provider credentials. The seed command upserts catalog metadata and uploads the packaged PDF/PPTX files into private `catalog/` object keys. Re-running it is safe and updates those catalog objects. Do not run the seed against a production database until the private bucket and credentials are configured. The generated assets must be present when the seed runs; use `education:generate` if they are absent.
+For Render, first confirm the Web Service has the production database and private storage provider variables configured (including `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_STORAGE_BUCKET=academic-files` when using Supabase). In the Render Web Service Shell, from the repository root, run these commands explicitly:
 
-Catalog descriptions and source links are available without an account. Downloads are streamed through the API and require an authenticated student; no public or signed object-storage URLs are returned. Keep the storage bucket private. Verify a student login and an authenticated download after seeding. The catalog and files have not been migrated, seeded, uploaded, or deployed by this repository change.
+```sh
+cd server
+npm run db:migrate:deploy
+npm run db:generate
+npm run education:seed
+```
+
+`db:migrate:deploy` applies the checked-in additive `EducationalMaterial` migration. `education:seed` reads the packaged resources and idempotently upserts records by their unique slugs, uploading packaged PDF/PPTX files into private `catalog/` storage keys. It prints the records upserted per section. It is safe to rerun after an interrupted run; it does not create duplicate catalog rows. Do not use `db:migrate:dev` on the production database. Ensure `server/content/resources` is present in the deployed commit; use `npm run education:generate` from `server` if the assets are absent, then rerun the seed.
+
+The Render Static Site also needs a rebuild after changing `VITE_API_URL`, since Vite embeds that public API origin at build time. Set it to the backend origin, with or without `/api`; the client normalizes either form to the API mount path.
+
+Catalog descriptions and source links are available without an account. Downloads are streamed through the API and require an authenticated student; no public or signed object-storage URLs are returned. Keep the storage bucket private. After seeding, verify `/api/health`, sign-in/session restoration at `/api/auth/me`, and catalog responses at `/api/education?section=my-learning` and `/api/education?section=lab-experiments`, then verify an authenticated file download. These commands must be run against the intended Render service/database and are not run automatically by deployment.
 
 Yasasvi is not hardcoded into the shared dashboard. To create an explicitly labeled local demo student, set `DEMO_STUDENT_ENABLED=true`, `DEMO_STUDENT_EMAIL` to a dedicated address, and `DEMO_STUDENT_PASSWORD` (12–72 bytes) in `server\.env`, then run the seed script. The seed refuses to overwrite an account not labeled `Yasasvi (DEMO)`. Keep the demo option disabled outside local development.
 
