@@ -133,7 +133,8 @@ describe('authentication screens', () => {
     expect(screen.queryByText('STUDENT IDENTITY CARD')).not.toBeInTheDocument();
     expect(identityCard).not.toHaveTextContent('Department:');
     expect(screen.getAllByText('DIGITAL LIBRARY')).toHaveLength(2);
-    expect(screen.getAllByText('Data Science Library')).toHaveLength(3);
+    expect(screen.getAllByText('DATA SCIENCE')).toHaveLength(2);
+    expect(screen.queryByRole('navigation', { name: 'Homepage navigation' })).not.toBeInTheDocument();
     expect(identityCard).toHaveTextContent('Registration Number:25302A030001');
     expect(identityCard).not.toHaveTextContent('Student ID:');
     const facultyCard = screen.getByRole('heading', { name: 'Faculty Information' }).closest('.ds-faculty-card');
@@ -149,13 +150,11 @@ describe('authentication screens', () => {
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.getByRole('link', { name: 'Resume (opens resume section)' })).toHaveAttribute('href', '/my-resume');
-    const quickAccess = screen.getByRole('heading', { name: 'Quick Access' }).closest('section');
-    const exploreDataScience = screen.getByRole('heading', { name: 'EXPLORE DATA SCIENCE' }).closest('section');
-    expect(quickAccess.compareDocumentPosition(exploreDataScience) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(exploreDataScience.querySelectorAll('.ds-topic-card')).toHaveLength(10);
-    expect(screen.getByRole('link', { name: /Python Programming.*Explore/ })).toHaveAttribute('href', '/tools/python');
-    expect(screen.getByRole('link', { name: /Virtual Labs.*Explore/ })).toHaveAttribute('href', '/lab-experiments');
-    expect([...exploreDataScience.querySelectorAll('.ds-topic-image')].every((image) => image.alt)).toBe(true);
+    expect(screen.getByRole('heading', { name: 'Quick Access' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'EXPLORE DATA SCIENCE' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Study shortcuts and featured resources' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Recently added learning materials' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Explore by subject' })).not.toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).toHaveTextContent('Digital Library');
     expect(screen.queryByRole('link', { name: /login|sign in|register/i })).not.toBeInTheDocument();
   });

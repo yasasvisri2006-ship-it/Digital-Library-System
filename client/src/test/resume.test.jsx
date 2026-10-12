@@ -10,6 +10,41 @@ vi.mock('../services/api', () => ({
 
 afterEach(cleanup);
 
+it('shows a profile-based resume starter without publishing it', async () => {
+  api.get.mockResolvedValue({
+    data: {
+      data: {
+        resume: {
+          displayName: 'Peta Yasasvisri',
+          email: 'student@example.test',
+          skills: [],
+          education: [{
+            institution: 'Mohan Babu University',
+            qualification: 'B.Tech',
+            field: 'CSE (DS)',
+            details: 'Current standing: 3rd Year · 5th Semester',
+          }],
+          internships: [],
+          achievements: [],
+          publicSections: [],
+          isPublic: false,
+        },
+        projects: [],
+        certificates: [],
+      },
+    },
+  });
+  render(<ResumePage />);
+
+  expect(await screen.findByRole('heading', { name: 'My Resume' })).toBeInTheDocument();
+  expect(screen.getByDisplayValue('Peta Yasasvisri')).toBeInTheDocument();
+  expect(screen.getByDisplayValue('Mohan Babu University')).toBeInTheDocument();
+  expect(screen.getByDisplayValue('B.Tech')).toBeInTheDocument();
+  expect(screen.getByDisplayValue('CSE (DS)')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Peta Yasasvisri' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Enable my public portfolio page')).not.toBeChecked();
+});
+
 it('loads the resume and opens the browser print flow for PDF export', async () => {
   const user = userEvent.setup();
   api.get.mockResolvedValue({

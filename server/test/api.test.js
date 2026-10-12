@@ -1077,7 +1077,16 @@ test('portfolio data supports CRUD, public visibility filtering, private uploads
       email: `${randomUUID()}@example.com`,
       passwordHash: await bcrypt.hash('unused-test-password', 4),
       role: UserRole.STUDENT,
-      studentProfile: { create: { studentId: `PORTFOLIO-${randomUUID().slice(0, 18)}` } },
+      studentProfile: {
+        create: {
+          studentId: `PORTFOLIO-${randomUUID().slice(0, 18)}`,
+          program: 'B.Tech',
+          branch: 'CSE (DS)',
+          department: 'Data Science',
+          year: '3rd Year',
+          semester: '5th Semester',
+        },
+      },
     },
   });
   createdUserIds.push(owner.id);
@@ -1136,6 +1145,12 @@ test('portfolio data supports CRUD, public visibility filtering, private uploads
   assert.equal(resumeResponse.status, 200);
   const resume = resumeBody.data.resume;
   assert.equal('filePath' in resume, false);
+  assert.deepEqual(resume.education, [{
+    institution: 'Mohan Babu University',
+    qualification: 'B.Tech',
+    field: 'CSE (DS)',
+    details: 'Current standing: 3rd Year · 5th Semester',
+  }]);
   const disabledPublicResponse = await fetch(`${baseUrl}/api/public/portfolio/${resume.publicSlug}`);
   assert.equal(disabledPublicResponse.status, 404);
 

@@ -2652,3 +2652,43 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
   .ds-topic-image-wrap { height: 105px; }
   .ds-topic-card-copy { min-height: 112px; padding: 9px; }
 }
+
+.portal-topbar .library-lockup strong {
+  color: #70152f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 2.1vw, 31px);
+  font-weight: 700;
+  letter-spacing: .015em;
+  line-height: 1.05;
+}
+.portal-topbar .library-lockup small {
+  color: #70152f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(20px, 1.8vw, 26px);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1.1;
+}
+@media (min-width: 1001px) {
+  .portal-topbar .portal-search { width: clamp(280px, 24vw, 320px); }
+}
+@media (min-width: 821px) and (max-width: 1000px) {
+  .portal-topbar .portal-search { width: 250px; }
+}
+@media (min-width: 701px) and (max-width: 820px) {
+  .portal-topbar .header-branding { gap: 8px; }
+  .portal-topbar .library-lockup { gap: 5px; }
+  .portal-topbar .library-lockup strong { font-size: 23px; }
+  .portal-topbar .library-lockup small { font-size: 19px; }
+  .portal-topbar .portal-search { width: 180px; }
+}
+@media (max-width: 700px) {
+  .portal-topbar .mobile-brand b { font-size: clamp(10px, 3vw, 12px); font-weight: 700; }
+  .portal-topbar .mobile-brand small { color: #70152f; font-size: clamp(9px, 2.7vw, 11px); font-style: normal; font-weight: 700; }
+  .portal-topbar .portal-search { width: clamp(115px, 31vw, 210px); }
+}
+@media (max-width: 480px) {
+  .portal-topbar .portal-search { width: 34px; }
+  .portal-topbar .portal-search:focus-within { width: 145px; }
+}

@@ -25,7 +25,7 @@ function BrandMark() {
       <span className="branding-divider" />
       <div className="library-lockup">
         <BookOpen size={27} strokeWidth={1.7} />
-        <span><strong>DIGITAL LIBRARY</strong><small>Data Science Library</small></span>
+        <span><strong>DIGITAL LIBRARY</strong><small>DATA SCIENCE</small></span>
       </div>
     </div>
   );
@@ -124,15 +124,6 @@ function Topbar({ menuOpen, onMenuToggle }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname === '/' || location.pathname === '/dashboard';
-  const homepageLinks = [
-    { label: 'Home', to: '/dashboard' },
-    { label: 'Books', to: '/digital-library' },
-    { label: 'Subjects', to: '/my-subjects' },
-    { label: 'Resources', to: '/study-materials' },
-    { label: 'Projects', to: '/projects' },
-    { label: 'Resume', to: '/my-resume' },
-    { label: 'Profile', to: '/my-profile' },
-  ];
 
   function submitSearch(event) {
     event.preventDefault();
@@ -173,17 +164,9 @@ function Topbar({ menuOpen, onMenuToggle }) {
         <Link to="/dashboard" className="mobile-brand" aria-label="MBU Digital Library home">
           <img src="/images/data-science-library-seal.svg" alt="" />
           <BookOpen size={18} strokeWidth={1.8} />
-          <span><b>DIGITAL LIBRARY</b><small>Data Science Library</small></span>
+          <span><b>DIGITAL LIBRARY</b><small>DATA SCIENCE</small></span>
         </Link>
       </div>
-
-      {isDashboard && (
-        <nav className="homepage-nav-links" aria-label="Homepage navigation">
-          {homepageLinks.map(({ label, to }) => (
-            <Link key={label} to={to} aria-current={to === '/dashboard' ? 'page' : undefined}>{label}</Link>
-          ))}
-        </nav>
-      )}
 
       <div className="topbar-actions">
         <form className="portal-search" role="search" onSubmit={submitSearch}>

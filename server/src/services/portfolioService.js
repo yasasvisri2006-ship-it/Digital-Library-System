@@ -45,6 +45,19 @@ function resumeResponse(resume) {
   };
 }
 
+function profileEducation(studentProfile) {
+  if (!studentProfile || !(studentProfile.program || studentProfile.branch || studentProfile.department)) return [];
+  const standing = [studentProfile.year, studentProfile.semester].filter(Boolean);
+  return [{
+    institution: 'Mohan Babu University',
+    ...(studentProfile.program ? { qualification: studentProfile.program } : {}),
+    ...((studentProfile.branch || studentProfile.department)
+      ? { field: studentProfile.branch || studentProfile.department }
+      : {}),
+    ...(standing.length ? { details: `Current standing: ${standing.join(' · ')}` } : {}),
+  }];
+}
+
 async function listProjects(ownerId) {
   const projects = await prisma.project.findMany({
     where: { ownerId },
@@ -196,12 +209,24 @@ async function ensureResume(ownerId) {
 }
 
 async function getResume(ownerId) {
-  const [resume, projects, certificates] = await Promise.all([
+  const [resume, projects, certificates, user] = await Promise.all([
     ensureResume(ownerId),
     listProjects(ownerId),
     listCertificates(ownerId, {}),
+    prisma.user.findUnique({
+      where: { id: ownerId },
+      select: {
+        studentProfile: {
+          select: { program: true, branch: true, department: true, year: true, semester: true },
+        },
+      },
+    }),
   ]);
-  return { resume: resumeResponse(resume), projects, certificates };
+  const education = profileEducation(user?.studentProfile);
+  const resumeWithProfileEducation = resume.education.length === 0 && education.length > 0
+    ? { ...resume, education }
+    : resume;
+  return { resume: resumeResponse(resumeWithProfileEducation), projects, certificates };
 }
 
 async function updateResume(ownerId, changes) {
@@ -501,4 +526,5 @@ module.exports = {
   updateResume,
   uploadResumeFile,
   uploadCertificateFile,
+  profileEducation,
 };
