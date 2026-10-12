@@ -149,6 +149,13 @@ describe('authentication screens', () => {
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.getByRole('link', { name: 'Resume (opens resume section)' })).toHaveAttribute('href', '/my-resume');
+    const quickAccess = screen.getByRole('heading', { name: 'Quick Access' }).closest('section');
+    const exploreDataScience = screen.getByRole('heading', { name: 'EXPLORE DATA SCIENCE' }).closest('section');
+    expect(quickAccess.compareDocumentPosition(exploreDataScience) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(exploreDataScience.querySelectorAll('.ds-topic-card')).toHaveLength(10);
+    expect(screen.getByRole('link', { name: /Python Programming.*Explore/ })).toHaveAttribute('href', '/tools/python');
+    expect(screen.getByRole('link', { name: /Virtual Labs.*Explore/ })).toHaveAttribute('href', '/lab-experiments');
+    expect([...exploreDataScience.querySelectorAll('.ds-topic-image')].every((image) => image.alt)).toBe(true);
     expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).toHaveTextContent('Digital Library');
     expect(screen.queryByRole('link', { name: /login|sign in|register/i })).not.toBeInTheDocument();
   });

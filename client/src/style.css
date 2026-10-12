@@ -2566,11 +2566,70 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
   font-size: 12px;
 }
 .ds-dashboard-main { margin-top: 0; }
+.ds-topic-section { scroll-margin-top: 124px; }
+.ds-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+.ds-topic-card {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid #f0e2e5;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(80, 37, 52, .045);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.ds-topic-card:hover {
+  transform: translateY(-3px);
+  border-color: #e5aab3;
+  box-shadow: 0 9px 20px rgba(112, 21, 47, .11);
+}
+.ds-topic-card:focus-visible { outline: 3px solid #c08a98; outline-offset: 3px; }
+.ds-topic-image-wrap {
+  display: block;
+  height: 112px;
+  overflow: hidden;
+  background: #fdf1f3;
+}
+.ds-topic-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s ease;
+}
+.ds-topic-card:hover .ds-topic-image { transform: scale(1.045); }
+.ds-topic-card-copy {
+  display: flex;
+  min-height: 112px;
+  flex: 1;
+  align-items: flex-start;
+  flex-direction: column;
+  padding: 10px;
+}
+.ds-topic-card-copy > strong { color: #70233d; font-size: 10px; line-height: 1.35; }
+.ds-topic-description { margin-top: 5px; color: #64748b; font-size: 8px; line-height: 1.55; }
+.ds-topic-explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 9px;
+  color: #b5122b;
+  font-size: 8px;
+  font-weight: 700;
+}
+.ds-topic-card:hover .ds-topic-explore { gap: 7px; }
 @media (max-width: 900px) {
   .ds-dashboard { grid-template-columns: minmax(0, 1fr); }
   .ds-dashboard-primary,
   .ds-dashboard-profile-column { grid-column: 1; }
   .ds-dashboard-primary > .library-hero { min-height: 390px; }
+  .ds-topic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
   .portal-sidebar {
@@ -2589,4 +2648,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
       url("/assets/library-building-hero-crop.png");
     background-position: center, right center;
   }
+  .ds-topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .ds-topic-image-wrap { height: 105px; }
+  .ds-topic-card-copy { min-height: 112px; padding: 9px; }
 }

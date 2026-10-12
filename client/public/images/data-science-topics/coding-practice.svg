@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img">
+  <rect width="640" height="360" fill="#f8e9ed"/><rect x="68" y="48" width="504" height="264" rx="18" fill="#252638" stroke="#a94e68" stroke-width="5"/>
+  <path d="M68 94h504" stroke="#494154" stroke-width="4"/><circle cx="101" cy="71" r="7" fill="#e28297"/><circle cx="125" cy="71" r="7" fill="#e6c26f"/><circle cx="149" cy="71" r="7" fill="#83bb9c"/>
+  <g font-family="monospace" font-size="21" font-weight="700"><text x="106" y="141" fill="#e6b6c3">def</text><text x="155" y="141" fill="#f5d27a">welcome</text><text x="261" y="141" fill="#fff">():</text><text x="137" y="180" fill="#a9c9ef">message</text><text x="246" y="180" fill="#fff">=</text><text x="270" y="180" fill="#a5d49c">"Keep learning!"</text><text x="137" y="219" fill="#e6b6c3">print</text><text x="197" y="219" fill="#fff">(message)</text></g>
+  <circle cx="478" cy="230" r="48" fill="#b51243"/><path d="m463 206 30 24-30 24z" fill="#fff"/>
+  <path d="M105 265h215" stroke="#596071" stroke-width="7" stroke-linecap="round"/><path d="M105 284h135" stroke="#596071" stroke-width="7" stroke-linecap="round"/>
+</svg>

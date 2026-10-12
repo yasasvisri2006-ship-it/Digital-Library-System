@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img">
+  <rect width="640" height="360" fill="#f5e9ef"/><path d="M0 48h640" stroke="#e3c6d0" stroke-width="2"/>
+  <rect x="68" y="87" width="153" height="193" rx="14" fill="#fff" stroke="#dfbdc8" stroke-width="5"/>
+  <rect x="244" y="62" width="153" height="218" rx="14" fill="#fff" stroke="#d4a1b0" stroke-width="5"/>
+  <rect x="420" y="102" width="153" height="178" rx="14" fill="#fff" stroke="#dfbdc8" stroke-width="5"/>
+  <path d="M68 132h153m23-25h153m23 40h153" stroke="#9b3153" stroke-width="11"/>
+  <path d="M96 161h95m-95 27h76m-76 27h92m-92 27h59" stroke="#dfc5ce" stroke-width="7" stroke-linecap="round"/>
+  <path d="M272 134h96m-96 27h64m-64 27h93m-93 27h70" stroke="#dfc5ce" stroke-width="7" stroke-linecap="round"/>
+  <path d="M448 184h98m-98 27h67m-67 27h91" stroke="#dfc5ce" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="330" cy="251" r="19" fill="#bf4d6d"/><path d="m321 251 7 7 13-15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m208 109 28-15m161 12 29 14" fill="none" stroke="#b85a75" stroke-width="5" stroke-dasharray="5 8"/>
+</svg>

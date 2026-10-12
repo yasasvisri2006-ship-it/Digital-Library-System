@@ -19,6 +19,7 @@ import { socialLinks } from '../data/socialLinks';
 import { publicDashboardProfile } from '../data/publicDashboardProfile';
 import { useAuth } from '../context/AuthContext';
 import { getProfilePhotoUrl } from '../services/profilePhoto';
+import DashboardTopicCards from '../components/DashboardTopicCards';
 import DashboardLearningResources from '../components/DashboardLearningResources';
 
 function WelcomeBanner() {
@@ -221,6 +222,7 @@ export default function DashboardPage() {
         <WelcomeBanner />
         <main className="ds-dashboard-main">
           <QuickAccessPanel />
+          <DashboardTopicCards />
           <DashboardLearningResources />
           <RecentBooksPanel />
         </main>
