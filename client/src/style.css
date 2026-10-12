@@ -2121,7 +2121,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
 @media print {
   @page { size: A4; margin: 14mm; }
   body { color: #111827 !important; background: #fff !important; print-color-adjust: exact; }
-  .portal-sidebar, .portal-topbar, .resume-editor-heading, .resume-tools-note, .resume-editor,
+  .portal-sidebar, .portal-topbar, .resume-editor-heading, .resume-tools-note, .resume-file-panel, .resume-editor,
   .resume-preview-caption, .resume-print-side-button, .learning-disclaimer, .academic-message,
   .public-portfolio-top, .public-portfolio-footer { display: none !important; }
   .portal-main { margin: 0 !important; padding: 0 !important; }
@@ -2370,4 +2370,58 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
   .admin-user-list > article { grid-template-columns: minmax(0,1fr); align-items: start; }
   .admin-user-actions { justify-content: flex-start; }
   .admin-credential-notice dl { grid-template-columns: minmax(0,1fr); }
+}
+
+.ds-dashboard-identity > .ds-id-card {
+  width: min(100%, 340px);
+  max-width: 340px;
+  justify-self: center;
+}
+.ds-dashboard-identity > .ds-id-card .ds-id-header {
+  min-height: 70px;
+  justify-content: center;
+  padding: 8px 12px;
+}
+.ds-dashboard-identity > .ds-id-card .ds-id-header > img,
+.ds-dashboard-identity > .ds-id-card .ds-logo-fallback {
+  width: 130px;
+  height: 54px;
+}
+.ds-dashboard-identity > .ds-id-card .ds-id-body { padding: 13px 18px 15px; }
+.ds-dashboard-identity > .ds-id-card .ds-id-person {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 10px;
+}
+.ds-dashboard-identity > .ds-id-card .ds-student-photo { width: 96px; height: 116px; }
+.ds-dashboard-identity > .ds-id-card .ds-id-fields { width: 100%; }
+.ds-dashboard-identity > .ds-id-card .ds-id-fields p { padding: 6px 0; }
+.ds-dashboard-identity > .ds-id-card .ds-id-fields p:first-child strong { font-size: 13px; }
+.ds-dashboard-identity > .ds-id-card .ds-id-bottom {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-top: 4px;
+  padding-top: 4px;
+}
+.ds-dashboard-identity > .ds-id-card .ds-id-bottom p {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1e5e8;
+}
+.resume-file-panel { margin-bottom: 12px; padding: 13px; }
+.resume-file-panel .learning-panel-heading { margin-bottom: 10px; }
+.resume-file-panel .learning-panel-heading > label { margin-left: auto; cursor: pointer; }
+#resume-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+.resume-file-details,
+.resume-file-details > span,
+.resume-file-details > div { display: flex; align-items: center; gap: 8px; }
+.resume-file-details { justify-content: space-between; flex-wrap: wrap; color: #475569; font-size: 10px; }
+.resume-file-details > span { min-width: 0; overflow-wrap: anywhere; }
+.resume-file-details > span svg { flex: none; color: #b5122b; }
+.resume-file-details .learning-button { min-height: 30px; padding: 0 9px; }
+@media (max-width: 700px) {
+  .resume-file-panel .learning-panel-heading { flex-wrap: wrap; }
+  .resume-file-details { align-items: flex-start; flex-direction: column; }
 }

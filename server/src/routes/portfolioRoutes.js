@@ -1,7 +1,7 @@
 const express = require('express');
 const portfolioController = require('../controllers/portfolioController');
 const { authenticate } = require('../middleware/authenticate');
-const { certificateFileUpload, portfolioImageUpload } = require('../middleware/portfolioFileUpload');
+const { certificateFileUpload, portfolioImageUpload, resumeFileUpload } = require('../middleware/portfolioFileUpload');
 const { requireRole } = require('../middleware/requireRole');
 const { requireTrustedOrigin } = require('../middleware/requireTrustedOrigin');
 const { validateRequest } = require('../middleware/validateRequest');
@@ -55,6 +55,13 @@ router.delete(
 );
 
 router.get('/resume', portfolioController.getResume);
+router.post(
+  '/resume/file',
+  requireTrustedOrigin,
+  resumeFileUpload.single('file'),
+  portfolioController.uploadResumeFile,
+);
+router.get('/resume/file', portfolioController.getResumeFile);
 router.put(
   '/resume',
   requireTrustedOrigin,

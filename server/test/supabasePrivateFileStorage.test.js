@@ -77,6 +77,23 @@ test('Supabase stores, privately downloads, and removes existing object keys', a
   calls.length = 0;
 });
 
+test('Supabase accepts private resume object keys', async () => {
+  const key = '00000000-0000-4000-8000-000000000001/resumes/00000000-0000-4000-8000-000000000002.pdf';
+  await privateFileStorage.store('', key, file, 'application/pdf');
+  assert.deepEqual(await readStream(await privateFileStorage.open('', key)), file);
+  await privateFileStorage.remove('', key);
+  assert.deepEqual(calls.map(({ operation, keyPath, keyPaths }) => ({
+    operation,
+    keyPath,
+    keyPaths,
+  })), [
+    { operation: 'upload', keyPath: key, keyPaths: undefined },
+    { operation: 'download', keyPath: key, keyPaths: undefined },
+    { operation: 'remove', keyPath: undefined, keyPaths: [key] },
+  ]);
+  calls.length = 0;
+});
+
 test('Supabase adapter rejects invalid object keys before storage access', async () => {
   await assert.rejects(
     privateFileStorage.open('', '../outside.pdf'),

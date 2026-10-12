@@ -344,6 +344,9 @@ model ResumeProfile {
   internships    Json     @default("[]")
   achievements   Json     @default("[]")
   publicSections String[] @default([])
+  filePath       String?
+  fileName       String?
+  fileSize       Int?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)

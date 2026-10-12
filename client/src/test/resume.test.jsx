@@ -5,7 +5,7 @@ import ResumePage from '../pages/ResumePage';
 import api from '../services/api';
 
 vi.mock('../services/api', () => ({
-  default: { get: vi.fn() },
+  default: { get: vi.fn(), post: vi.fn() },
 }));
 
 afterEach(cleanup);
@@ -29,4 +29,30 @@ it('loads the resume and opens the browser print flow for PDF export', async () 
 
   expect(api.get).toHaveBeenCalledWith('/portfolio/resume', expect.objectContaining({ signal: expect.any(AbortSignal) }));
   expect(print).toHaveBeenCalledOnce();
+});
+
+it('uploads a PDF resume and displays a private open and download option', async () => {
+  const user = userEvent.setup();
+  api.get.mockResolvedValue({
+    data: {
+      data: {
+        resume: { displayName: 'Test Student', skills: [], education: [], internships: [], achievements: [], publicSections: [] },
+        projects: [],
+        certificates: [],
+      },
+    },
+  });
+  api.post.mockResolvedValue({
+    data: { data: { resume: { fileName: 'my-resume.pdf', fileSize: 12, fileUrl: '/portfolio/resume/file' } } },
+  });
+  render(<ResumePage />);
+
+  const file = new File(['%PDF-1.4\nresume'], 'my-resume.pdf', { type: 'application/pdf' });
+  await user.upload(await screen.findByLabelText('Upload PDF'), file);
+
+  expect(api.post).toHaveBeenCalledWith('/portfolio/resume/file', expect.any(FormData));
+  expect(await screen.findByText('my-resume.pdf')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Open' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Download' })).toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('Resume uploaded privately.');
 });

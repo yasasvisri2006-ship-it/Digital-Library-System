@@ -67,7 +67,7 @@ after(async () => {
         if (error.code !== 'ENOENT') throw error;
       });
     }
-    const [screenshots, certificates] = await Promise.all([
+    const [screenshots, certificates, resumes] = await Promise.all([
       prisma.projectScreenshot.findMany({
         where: { ownerId: { in: createdUserIds } },
         select: { filePath: true },
@@ -76,8 +76,12 @@ after(async () => {
         where: { ownerId: { in: createdUserIds }, filePath: { not: null } },
         select: { filePath: true },
       }),
+      prisma.resumeProfile.findMany({
+        where: { ownerId: { in: createdUserIds }, filePath: { not: null } },
+        select: { filePath: true },
+      }),
     ]);
-    for (const { filePath } of [...screenshots, ...certificates]) {
+    for (const { filePath } of [...screenshots, ...certificates, ...resumes]) {
       await unlink(path.resolve(env.portfolioStorageDir, filePath)).catch((error) => {
         if (error.code !== 'ENOENT') throw error;
       });
@@ -1131,8 +1135,40 @@ test('portfolio data supports CRUD, public visibility filtering, private uploads
   const resumeBody = await resumeResponse.json();
   assert.equal(resumeResponse.status, 200);
   const resume = resumeBody.data.resume;
+  assert.equal('filePath' in resume, false);
   const disabledPublicResponse = await fetch(`${baseUrl}/api/public/portfolio/${resume.publicSlug}`);
   assert.equal(disabledPublicResponse.status, 404);
+
+  const resumeForm = new FormData();
+  resumeForm.append('file', new Blob(['%PDF-1.4\nTest resume\n%%EOF\n'], { type: 'application/pdf' }), 'test-resume.pdf');
+  const resumeUploadResponse = await fetch(`${baseUrl}/api/portfolio/resume/file`, {
+    method: 'POST',
+    headers: { cookie: ownerCookie, origin },
+    body: resumeForm,
+  });
+  const resumeUploadBody = await resumeUploadResponse.json();
+  assert.equal(resumeUploadResponse.status, 200, JSON.stringify(resumeUploadBody));
+  assert.equal(resumeUploadBody.data.resume.fileName, 'test-resume.pdf');
+  assert.equal('filePath' in resumeUploadBody.data.resume, false);
+  const privateResumeDownload = await fetch(`${baseUrl}/api/portfolio/resume/file`, {
+    headers: { cookie: ownerCookie, origin },
+  });
+  assert.equal(privateResumeDownload.status, 200);
+  assert.match(privateResumeDownload.headers.get('cache-control'), /private, no-store/);
+  assert.match(privateResumeDownload.headers.get('content-disposition'), /attachment/);
+  assert.match(await privateResumeDownload.text(), /^%PDF-1\.4/);
+  const unauthorizedResumeDownload = await fetch(`${baseUrl}/api/portfolio/resume/file`, {
+    headers: { cookie: otherCookie, origin },
+  });
+  assert.equal(unauthorizedResumeDownload.status, 404);
+  const invalidResumeForm = new FormData();
+  invalidResumeForm.append('file', new Blob(['not a PDF'], { type: 'application/pdf' }), 'invalid-resume.pdf');
+  const invalidResumeUpload = await fetch(`${baseUrl}/api/portfolio/resume/file`, {
+    method: 'POST',
+    headers: { cookie: ownerCookie, origin },
+    body: invalidResumeForm,
+  });
+  assert.equal(invalidResumeUpload.status, 400);
 
   const resumeUpdate = await jsonRequest('/api/portfolio/resume', 'PUT', {
     displayName: 'Portfolio Test Student',
@@ -1160,6 +1196,8 @@ test('portfolio data supports CRUD, public visibility filtering, private uploads
   assert.deepEqual(unpublishedBody.data.portfolio.resume.internships, []);
   assert.deepEqual(unpublishedBody.data.portfolio.resume.achievements, []);
   assert.equal('email' in unpublishedBody.data.portfolio.resume, false);
+  assert.equal('fileName' in unpublishedBody.data.portfolio.resume, false);
+  assert.equal('fileUrl' in unpublishedBody.data.portfolio.resume, false);
 
   const publishProjectResponse = await jsonRequest(`/api/portfolio/projects/${project.id}`, 'PATCH', {
     isPublic: true,

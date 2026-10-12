@@ -37,6 +37,14 @@ function certificateResponse(certificate) {
   };
 }
 
+function resumeResponse(resume) {
+  const { filePath, ...safeResume } = resume;
+  return {
+    ...safeResume,
+    fileUrl: filePath ? '/portfolio/resume/file' : null,
+  };
+}
+
 async function listProjects(ownerId) {
   const projects = await prisma.project.findMany({
     where: { ownerId },
@@ -193,12 +201,46 @@ async function getResume(ownerId) {
     listProjects(ownerId),
     listCertificates(ownerId, {}),
   ]);
-  return { resume, projects, certificates };
+  return { resume: resumeResponse(resume), projects, certificates };
 }
 
 async function updateResume(ownerId, changes) {
   await ensureResume(ownerId);
-  return prisma.resumeProfile.update({ where: { ownerId }, data: changes });
+  const resume = await prisma.resumeProfile.update({ where: { ownerId }, data: changes });
+  return resumeResponse(resume);
+}
+
+async function uploadResumeFile(ownerId, file) {
+  if (!file || file.mimetype !== 'application/pdf' || !file.buffer.subarray(0, 5).equals(Buffer.from('%PDF-'))) {
+    throw new ApiError(400, 'Choose a valid PDF resume file.');
+  }
+  const currentResume = await ensureResume(ownerId);
+  const filePath = `${ownerId}/resumes/${randomUUID()}.pdf`;
+  await privateFileStorage.store(env.portfolioStorageDir, filePath, file.buffer, 'application/pdf');
+  try {
+    const resume = await prisma.resumeProfile.update({
+      where: { ownerId },
+      data: {
+        filePath,
+        fileName: safeName(file.originalname, 'resume.pdf'),
+        fileSize: file.size,
+      },
+    });
+    await removeFiles(currentResume.filePath ? [currentResume.filePath] : []);
+    return resumeResponse(resume);
+  } catch (error) {
+    await removeFiles([filePath]);
+    throw error;
+  }
+}
+
+async function getResumeFile(ownerId) {
+  const resume = await prisma.resumeProfile.findUnique({
+    where: { ownerId },
+    select: { filePath: true, fileName: true },
+  });
+  if (!resume?.filePath) throw new ApiError(404, 'Resume file not found.');
+  return { ...resume, stream: await privateFileStorage.open(env.portfolioStorageDir, resume.filePath) };
 }
 
 async function listCertificates(ownerId, { search, category } = {}) {
@@ -446,6 +488,7 @@ module.exports = {
   getPublicCertificateFile,
   getPublicProjectScreenshot,
   getResume,
+  getResumeFile,
   listCareer,
   listCertificates,
   listProjects,
@@ -456,5 +499,6 @@ module.exports = {
   updateCertificate,
   updateProject,
   updateResume,
+  uploadResumeFile,
   uploadCertificateFile,
 };

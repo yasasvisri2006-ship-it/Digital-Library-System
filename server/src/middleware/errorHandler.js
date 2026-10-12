@@ -31,7 +31,7 @@ function errorHandler(error, req, res, next) {
       ? isAcademicResource
         ? 'Academic PDF files must be 20 MB or smaller.'
         : isPortfolio
-          ? 'Project screenshots must be 8 MB or smaller and certificate PDFs 20 MB or smaller.'
+            ? 'Project screenshots must be 8 MB or smaller; portfolio PDFs must be 20 MB or smaller.'
         : 'Profile photos must be 5 MB or smaller.'
       : isAcademicResource
         ? 'The academic PDF upload could not be processed.'
@@ -53,6 +53,7 @@ function errorHandler(error, req, res, next) {
   if (
     error.message === 'Upload a JPEG, PNG, or WebP project screenshot.'
     || error.message === 'Upload a PDF certificate file.'
+    || error.message === 'Upload a PDF resume file.'
   ) {
     sendError(res, { statusCode: 400, message: error.message });
     return;

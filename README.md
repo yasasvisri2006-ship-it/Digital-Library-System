@@ -175,13 +175,13 @@ These records use `/api/learning/coding`, `/api/learning/tools`, and `/api/learn
 
 ### My Projects, Resume, Certificates, and Career Preparation
 
-The private career area is available from the sidebar at **My Projects**, **My Resume**, **Certificates**, and **Career Preparation**. Project records support technology stacks, documentation, GitHub/live URLs, development status, and private screenshot uploads. Resume data is structured for a simple, selectable-text, ATS-oriented print layout; use **Export / Print PDF** and choose **Save as PDF** in the browser. Certificates support search/category filtering, credential links, PDF uploads, and independent visibility controls. Career Preparation stores private internship application status/history and private interview/aptitude resources. These views show database records rather than fabricated counts.
+The private career area is available from the sidebar at **My Projects**, **My Resume**, **Certificates**, and **Career Preparation**. Project records support technology stacks, documentation, GitHub/live URLs, development status, and private screenshot uploads. Resume data is structured for a simple, selectable-text, ATS-oriented print layout; use **Export / Print PDF** and choose **Save as PDF** in the browser. The My Resume page also accepts a private PDF upload up to 20 MB, with authenticated owner-only open and download actions. Certificates support search/category filtering, credential links, PDF uploads, and independent visibility controls. Career Preparation stores private internship application status/history and private interview/aptitude resources. These views show database records rather than fabricated counts.
 
-All portfolio editing endpoints use the authenticated student's owner ID; the API never accepts a browser-supplied owner ID. Projects, certificates, resume sections, internship applications, and saved resources remain private by default. To publish, enable the resume and choose which resume sections to expose, then separately opt in individual projects and certificates. Copy the generated opaque link from **My Resume** to share `/portfolio/:slug`. The read-only public API is `/api/public/portfolio/:slug` and only returns explicitly public resume sections, projects, and certificates. Internship applications and career resources are never included in the public response. Private screenshot/certificate downloads require authentication; public file access requires both a public resume and a separately public project/certificate.
+All portfolio editing endpoints use the authenticated student's owner ID; the API never accepts a browser-supplied owner ID. Projects, certificates, uploaded resume files, resume sections, internship applications, and saved resources remain private by default. To publish, enable the resume and choose which resume sections to expose, then separately opt in individual projects and certificates. Uploaded resume files are never exposed through public portfolio pages. Copy the generated opaque link from **My Resume** to share `/portfolio/:slug`. The read-only public API is `/api/public/portfolio/:slug` and only returns explicitly public resume sections, projects, and certificates. Internship applications and career resources are never included in the public response. Private screenshot, certificate, and resume file downloads require authentication; public file access requires both a public resume and a separately public project/certificate.
 
-Private project screenshots accept JPEG, PNG, or WebP up to 8 MB; certificate uploads accept PDF up to 20 MB. Files are signature-checked, stored with random names outside the web root, and served by owner-authorized API handlers. Development storage defaults to ignored `server/storage/portfolio`. Production uses the configured private object-storage bucket. Portfolio items are publicly served only when the owner explicitly shares them and the relevant project/certificate is marked public. Do not commit `.env` or expose object-store credentials in frontend variables.
+Private project screenshots accept JPEG, PNG, or WebP up to 8 MB; certificate and resume uploads accept PDF up to 20 MB. Files are signature-checked, stored with random names outside the web root, and served by owner-authorized API handlers. Development storage defaults to ignored `server/storage/portfolio`. Production uses the configured private object-storage bucket. Portfolio items are publicly served only when the owner explicitly shares them and the relevant project/certificate is marked public. Do not commit `.env` or expose object-store credentials in frontend variables.
 
-The career schema migration is `server/prisma/migrations/20261010170000_portfolio_career`. Apply pending migrations and regenerate the client with:
+The career schema migration is `server/prisma/migrations/20261010170000_portfolio_career`; private resume file metadata is added in `server/prisma/migrations/20261012214800_resume_file`. Apply pending migrations and regenerate the client with:
 
 ```powershell
 npm.cmd --prefix server run db:migrate:dev
@@ -191,7 +191,7 @@ npm.cmd --prefix server run db:generate
 ## Frontend structure
 
 - `client/src/data/mockFaculty.js` — placeholder faculty card content; student identity comes from the signed-in API user
-- `client/src/data/socialLinks.js` — LinkedIn, GitHub, and resume URLs for the dashboard Connect with me card
+- `client/src/data/socialLinks.js` — LinkedIn and GitHub URLs for the dashboard Connect with me card
 - `client/src/data/navigation.js` — sidebar destinations and module labels
 - `client/src/data/learningTools.js` — tool learning guides, installation notes, exercises, and official documentation links
 - `client/src/components/` — shared portal shell and loading view
@@ -202,7 +202,7 @@ The supplied MBU logo is stored at `client/public/images/mbu-logo.png`. The dash
 
 The dashboard shows Quick Access and database-backed featured learning resources; the Data Science modules are available separately at `/modules`. Coding Practice, Data Science Tools, Cloud & AWS, My Subjects, and the educational catalog sections display shared educational resources while personal progress continues to use student-owned API records. Existing routes such as `/my-resume` and `/digital-library` remain available from the profile menu and related links.
 
-The Quick Access "View All" link opens `/quick-access`, which lists all seven Quick Access destinations. To enable the social cards, replace the empty `linkedin`, `github`, and `resume` values in `client/src/data/socialLinks.js` with your real URLs. Until configured, those cards are visibly disabled rather than linking to invented profiles or files.
+The Quick Access "View All" link opens `/quick-access`, which lists all seven Quick Access destinations. The dashboard Connect with me card links to the configured LinkedIn and GitHub profiles and opens the authenticated My Resume section for private resume uploads and file access.
 
 ## Run the backend
 

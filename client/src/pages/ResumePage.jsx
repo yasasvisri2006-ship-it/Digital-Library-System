@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Eye, EyeOff, FileText, Printer, Save, Share2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, Download, Eye, EyeOff, FileText, Printer, Save, Share2, Upload } from 'lucide-react';
 import api from '../services/api';
 
 const initialResume = {
@@ -37,8 +37,10 @@ export default function ResumePage() {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -107,6 +109,60 @@ export default function ResumePage() {
     }
   }
 
+  async function uploadResumeFile(file) {
+    setError('');
+    setMessage('');
+    if (!file) return;
+    if (file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')) {
+      setError('Choose a PDF resume file.');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      setError('Resume PDF files must be 20 MB or smaller.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploading(true);
+    try {
+      const { data } = await api.post('/portfolio/resume/file', formData);
+      setResume((current) => ({ ...current, ...data.data.resume }));
+      setMessage('Resume uploaded privately.');
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Resume could not be uploaded.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  async function accessResumeFile(download) {
+    setError('');
+    const resumeWindow = download ? null : window.open('about:blank', '_blank');
+    if (!download && !resumeWindow) {
+      setError('Allow pop-ups to open your resume.');
+      return;
+    }
+    if (resumeWindow) resumeWindow.opener = null;
+    try {
+      const { data } = await api.get('/portfolio/resume/file', { responseType: 'blob' });
+      const fileUrl = URL.createObjectURL(data);
+      if (download) {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = resume.fileName || 'resume.pdf';
+        link.click();
+      } else {
+        resumeWindow.location.href = fileUrl;
+      }
+      window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000);
+    } catch (requestError) {
+      resumeWindow?.close();
+      setError(requestError.response?.data?.message || 'Resume file could not be opened.');
+    }
+  }
+
   if (loading) return <div className="academic-loading">Loading your resume...</div>;
 
   return (
@@ -119,6 +175,25 @@ export default function ResumePage() {
       <div className="resume-tools-note"><strong>ATS-friendly PDF:</strong> Choose “Save as PDF” in your browser’s print dialog. The printable document uses a simple, selectable-text layout without dashboard navigation or decorative columns.</div>
       {error && <p className="academic-message is-error" role="alert">{error}</p>}
       {message && <p className="academic-message" role="status">{message}</p>}
+      <section className="learning-panel resume-file-panel" aria-labelledby="resume-file-heading">
+        <div className="learning-panel-heading">
+          <div><span className="section-eyebrow">PRIVATE FILE</span><h2 id="resume-file-heading">Uploaded resume</h2></div>
+          <label className="learning-button is-secondary" htmlFor="resume-file-input">
+            <Upload size={14} /> {uploading ? 'Uploading...' : 'Upload PDF'}
+          </label>
+          <input
+            ref={fileInputRef}
+            id="resume-file-input"
+            type="file"
+            accept="application/pdf,.pdf"
+            disabled={uploading}
+            onChange={(event) => uploadResumeFile(event.target.files?.[0])}
+          />
+        </div>
+        {resume.fileName
+          ? <div className="resume-file-details"><span><FileText size={15} />{resume.fileName}</span><div><button type="button" className="learning-button is-secondary" onClick={() => accessResumeFile(false)}>Open</button><button type="button" className="learning-button is-secondary" onClick={() => accessResumeFile(true)}><Download size={14} /> Download</button></div></div>
+          : <p className="learning-muted">No resume file uploaded. Choose a PDF (up to 20 MB); it will be stored privately.</p>}
+      </section>
 
       <div className="resume-editor-grid">
         <form className="resume-editor" onSubmit={(event) => { event.preventDefault(); save(); }}>

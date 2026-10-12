@@ -1,4 +1,4 @@
 export const facultyProfile = {
-  name: 'BOSUBABU SIR',
+  name: 'S Bosu Babu',
   title: 'Assistant Professor',
 };

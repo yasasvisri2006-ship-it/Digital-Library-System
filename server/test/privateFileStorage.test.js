@@ -19,22 +19,27 @@ async function readStream(stream) {
   return Buffer.concat(chunks);
 }
 
-test('private storage stores, opens, and removes academic and portfolio object keys', async () => {
+test('private storage stores, opens, and removes academic, portfolio, and resume object keys', async () => {
   const pdf = Buffer.from('%PDF-1.4\nprivate test file\n%%EOF\n');
   const imageKey = `${randomUUID()}/projects/${randomUUID()}.png`;
+  const resumeKey = `${randomUUID()}/resumes/${randomUUID()}.pdf`;
   const pdfKey = `${randomUUID()}.pdf`;
 
   try {
     await privateFileStorage.store(storageDir, pdfKey, pdf, 'application/pdf');
     await privateFileStorage.store(storageDir, imageKey, pdf, 'image/png');
+    await privateFileStorage.store(storageDir, resumeKey, pdf, 'application/pdf');
 
     assert.deepEqual(await readStream(await privateFileStorage.open(storageDir, pdfKey)), pdf);
     assert.deepEqual(await readStream(await privateFileStorage.open(storageDir, imageKey)), pdf);
+    assert.deepEqual(await readStream(await privateFileStorage.open(storageDir, resumeKey)), pdf);
 
     await privateFileStorage.remove(storageDir, pdfKey);
     await privateFileStorage.remove(storageDir, imageKey);
+    await privateFileStorage.remove(storageDir, resumeKey);
     await assert.rejects(privateFileStorage.open(storageDir, pdfKey), { statusCode: 404 });
     await assert.rejects(privateFileStorage.open(storageDir, imageKey), { statusCode: 404 });
+    await assert.rejects(privateFileStorage.open(storageDir, resumeKey), { statusCode: 404 });
     await assert.rejects(privateFileStorage.open(storageDir, '..\\outside.pdf'), { statusCode: 404 });
   } finally {
     rmSync(storageDir, { recursive: true, force: true });

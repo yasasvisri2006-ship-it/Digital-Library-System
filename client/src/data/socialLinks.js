@@ -1,6 +1,5 @@
-// Replace these empty strings with your real profile and resume URLs.
 export const socialLinks = {
-  linkedin: '',
-  github: '',
+  linkedin: 'https://linkedin.com/in/peta-yasasvisri-reddy-28763b379/',
+  github: 'https://github.com/yasasvisri2006-ship-it',
   resume: '',
 };

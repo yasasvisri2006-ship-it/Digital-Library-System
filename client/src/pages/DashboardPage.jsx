@@ -101,8 +101,6 @@ function StudentIdentityCard() {
         {hasLogo
           ? <img src="/images/mbu-logo.png" alt="Mohan Babu University" onError={() => setHasLogo(false)} />
           : <span className="ds-id-brand"><strong>MBU</strong><small>MOHAN BABU UNIVERSITY</small></span>}
-        <span className="ds-id-divider" aria-hidden="true" />
-        <strong className="ds-id-title">STUDENT IDENTITY CARD</strong>
       </div>
       <div className="ds-id-body">
         <div className="ds-id-person">
@@ -119,7 +117,7 @@ function StudentIdentityCard() {
         </div>
         <div className="ds-id-bottom">
           <p><span>Semester:</span><strong>{studentProfile.semester || 'Not provided'}</strong></p>
-          <p><span>Student ID:</span><strong>{studentProfile.studentId || 'Not provided'}</strong></p>
+          <p><span>Registration Number:</span><strong>{studentProfile.studentId || 'Not provided'}</strong></p>
         </div>
       </div>
     </article>
@@ -152,7 +150,7 @@ function MotivationCard() {
 const connectItems = [
   { label: 'LinkedIn', url: socialLinks.linkedin, tone: 'linkedin' },
   { label: 'GitHub', url: socialLinks.github, tone: 'github' },
-  { label: 'Resume', url: socialLinks.resume, icon: FileText, tone: 'resume' },
+  { label: 'Resume', to: '/my-resume', icon: FileText, tone: 'resume' },
 ];
 
 function ConnectWithMeCard() {
@@ -163,7 +161,7 @@ function ConnectWithMeCard() {
         <span />
       </div>
       <div className="ds-connect-grid">
-        {connectItems.map(({ label, url, icon: Icon, tone }) => {
+        {connectItems.map(({ label, url, to, icon: Icon, tone }) => {
           const content = (
             <>
               <span className="ds-connect-icon">
@@ -176,13 +174,22 @@ function ConnectWithMeCard() {
             </>
           );
 
-          return url ? (
+          return to ? (
+            <Link
+              key={label}
+              className={`ds-connect-item ${tone}`}
+              to={to}
+              aria-label={`${label} (opens resume section)`}
+            >
+              {content}
+            </Link>
+          ) : url ? (
             <a
               key={label}
               className={`ds-connect-item ${tone}`}
               href={url}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label={`${label} (opens in a new tab)`}
             >
               {content}

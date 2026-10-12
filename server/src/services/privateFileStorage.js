@@ -28,7 +28,7 @@ const supabase = env.academicResourceStorageProvider === 'supabase'
   })
   : null;
 
-const validObjectKey = /^(?:[a-f0-9-]{36}\.pdf|[a-f0-9-]{36}\/(?:projects\/[a-f0-9-]{36}\.(?:jpg|png|webp)|certificates\/[a-f0-9-]{36}\.pdf)|catalog\/[a-f0-9-]{36}\.(?:pdf|pptx))$/i;
+const validObjectKey = /^(?:[a-f0-9-]{36}\.pdf|[a-f0-9-]{36}\/(?:projects\/[a-f0-9-]{36}\.(?:jpg|png|webp)|certificates\/[a-f0-9-]{36}\.pdf|resumes\/[a-f0-9-]{36}\.pdf)|catalog\/[a-f0-9-]{36}\.(?:pdf|pptx))$/i;
 
 function assertValidKey(key) {
   if (typeof key !== 'string' || !validObjectKey.test(key)) {

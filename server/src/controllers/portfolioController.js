@@ -55,6 +55,26 @@ async function updateResume(req, res) {
   sendSuccess(res, { message: 'Resume updated.', data: { resume } });
 }
 
+async function uploadResumeFile(req, res) {
+  const resume = await portfolioService.uploadResumeFile(req.auth.id, req.file);
+  sendSuccess(res, { message: 'Resume uploaded privately.', data: { resume } });
+}
+
+async function getResumeFile(req, res, next) {
+  try {
+    const file = await portfolioService.getResumeFile(req.auth.id);
+    res.set({
+      'Cache-Control': 'private, no-store',
+      'Content-Type': 'application/pdf',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    res.attachment(file.fileName);
+    file.stream.on('error', next).pipe(res);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function listCertificates(req, res) {
   for (const field of ['search', 'category']) {
     const value = req.query[field];
@@ -210,6 +230,7 @@ module.exports = {
   getPublicPortfolio,
   getPublicProjectScreenshot,
   getResume,
+  getResumeFile,
   listCareer,
   listCertificates,
   listProjects,
@@ -218,6 +239,7 @@ module.exports = {
   updateCertificate,
   updateProject,
   updateResume,
+  uploadResumeFile,
   uploadCertificateFile,
   uploadProjectScreenshot,
   validatePortfolioParams,
