@@ -149,7 +149,7 @@ describe('authentication screens', () => {
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.getByRole('link', { name: 'Resume (opens resume section)' })).toHaveAttribute('href', '/my-resume');
-    expect(screen.getByRole('navigation', { name: 'Student portal navigation' })).toHaveTextContent('Digital Library');
+    expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).toHaveTextContent('Digital Library');
     expect(screen.queryByRole('link', { name: /login|sign in|register/i })).not.toBeInTheDocument();
   });
 
@@ -170,8 +170,38 @@ describe('authentication screens', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('navigation', { name: 'Student portal navigation' })).toHaveTextContent('Digital Library');
+    expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).toHaveTextContent('Digital Library');
     expect(screen.queryByRole('link', { name: 'Library Admin' })).not.toBeInTheDocument();
     expect(screen.getByText('Dashboard content')).toBeInTheDocument();
+  });
+
+  it('keeps navigation closed by default and closes it after selecting a route', async () => {
+    const user = userEvent.setup();
+    useAuth.mockReturnValue({
+      user: { name: 'Test Student', role: 'student', studentProfile: {} },
+      logout: vi.fn(),
+      loading: false,
+      sessionError: '',
+    });
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route element={<DashboardLayout />}>
+            <Route path="/" element={<p>Dashboard content</p>} />
+            <Route path="/my-subjects" element={<p>Subjects content</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Open navigation menu' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
+
+    await user.click(toggle);
+    expect(screen.getByRole('button', { name: 'Close navigation menu' })).toHaveAttribute('aria-expanded', 'true');
+    await user.click(screen.getByRole('link', { name: 'My Subjects' }));
+    expect(screen.getByText('Subjects content')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open navigation menu' })).toHaveAttribute('aria-expanded', 'false');
   });
 });

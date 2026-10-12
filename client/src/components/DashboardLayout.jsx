@@ -8,7 +8,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { navigationItems } from '../data/navigation';
 import { publicDashboardProfile } from '../data/publicDashboardProfile';
@@ -64,7 +64,7 @@ function Sidebar({ mobileOpen, onClose }) {
           <motion.button
             type="button"
             className="sidebar-backdrop"
-            aria-label="Close navigation menu"
+            aria-label="Close navigation overlay"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -72,10 +72,15 @@ function Sidebar({ mobileOpen, onClose }) {
           />
         )}
       </AnimatePresence>
-      <aside className={`portal-sidebar${mobileOpen ? ' is-open' : ''}`}>
+      <aside
+        id="student-portal-sidebar"
+        className={`portal-sidebar${mobileOpen ? ' is-open' : ''}`}
+        aria-hidden={!mobileOpen}
+        inert={!mobileOpen}
+      >
         <div className="sidebar-brand">
           <span className="sidebar-mobile-title">YOUR PORTAL</span>
-          <button className="mobile-close icon-button" type="button" onClick={onClose} aria-label="Close menu">
+          <button className="mobile-close icon-button" type="button" onClick={onClose} aria-label="Close sidebar">
             <X size={19} />
           </button>
         </div>
@@ -116,7 +121,7 @@ function Sidebar({ mobileOpen, onClose }) {
   );
 }
 
-function Topbar({ onMenuOpen }) {
+function Topbar({ menuOpen, onMenuToggle }) {
   const [search, setSearch] = useState('');
   const [openPanel, setOpenPanel] = useState('');
   const [logoutError, setLogoutError] = useState('');
@@ -160,8 +165,15 @@ function Topbar({ onMenuOpen }) {
   return (
     <header className={`portal-topbar${isDashboard ? ' homepage-topbar' : ''}`}>
       <div className="topbar-brand-area">
-        <button className="mobile-menu-toggle icon-button" type="button" onClick={onMenuOpen} aria-label="Open navigation menu">
-          <Menu size={20} />
+        <button
+          className="mobile-menu-toggle icon-button"
+          type="button"
+          onClick={onMenuToggle}
+          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={menuOpen}
+          aria-controls="student-portal-sidebar"
+        >
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
         <BrandMark />
         <Link to="/dashboard" className="mobile-brand" aria-label="MBU Digital Library home">
@@ -264,11 +276,24 @@ export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') setMobileOpen(false);
+    }
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [mobileOpen]);
+
   return (
     <div className="portal-shell">
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="portal-main">
-        <Topbar onMenuOpen={() => setMobileOpen(true)} />
+        <Topbar menuOpen={mobileOpen} onMenuToggle={() => setMobileOpen((open) => !open)} />
         <main className="portal-content">
           <AnimatePresence mode="wait">
             <motion.div

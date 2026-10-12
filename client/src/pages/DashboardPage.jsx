@@ -217,21 +217,25 @@ function ConnectWithMeCard() {
 export default function DashboardPage() {
   return (
     <div className="ds-dashboard">
-      <WelcomeBanner />
-      <div className="ds-dashboard-identity">
-        <StudentIdentityCard />
-        <FacultyCard />
+      <div className="ds-dashboard-primary">
+        <WelcomeBanner />
+        <main className="ds-dashboard-main">
+          <QuickAccessPanel />
+          <DashboardLearningResources />
+          <RecentBooksPanel />
+        </main>
       </div>
-      <main className="ds-dashboard-main">
-        <QuickAccessPanel />
-        <DashboardLearningResources />
-        <RecentBooksPanel />
-      </main>
-      <aside className="ds-dashboard-aside" aria-label="Student information">
-        <ConnectWithMeCard />
-        <MotivationCard />
-        <Link to="/my-resume" className="ds-resume-link"><FileText size={15} /> View my academic profile <ArrowRight size={14} /></Link>
-      </aside>
+      <div className="ds-dashboard-profile-column">
+        <div className="ds-dashboard-identity">
+          <StudentIdentityCard />
+          <FacultyCard />
+        </div>
+        <aside className="ds-dashboard-aside" aria-label="Student information">
+          <ConnectWithMeCard />
+          <MotivationCard />
+          <Link to="/my-resume" className="ds-resume-link"><FileText size={15} /> View my academic profile <ArrowRight size={14} /></Link>
+        </aside>
+      </div>
     </div>
   );
 }
