@@ -117,6 +117,56 @@ test('/api/auth/me is mounted and still verifies the authenticated session', asy
   assert.equal(body.data.user.role, 'student');
 });
 
+test('Python code execution requires an authenticated student, validates requests, and reports missing sandbox configuration', async () => {
+  const unauthenticated = await fetch(`${baseUrl}/api/learning/coding/execute`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: 'http://localhost:5173' },
+    body: JSON.stringify({ language: 'PYTHON', code: 'print(1)' }),
+  });
+  assert.equal(unauthenticated.status, 401);
+
+  const token = jwt.sign(
+    { id: testUser.id, tokenVersion: testUser.tokenVersion },
+    env.jwtSecret,
+    { expiresIn: '1m' },
+  );
+  const headers = {
+    'content-type': 'application/json',
+    cookie: `mbu_session=${token}`,
+    origin: 'http://localhost:5173',
+  };
+  const invalidRequest = await fetch(`${baseUrl}/api/learning/coding/execute`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ language: 'PYTHON', code: 'x'.repeat(12001) }),
+  });
+  assert.equal(invalidRequest.status, 400);
+
+  const unavailable = await fetch(`${baseUrl}/api/learning/coding/execute`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ language: 'PYTHON', code: 'print(1)' }),
+  });
+  const unavailableBody = await unavailable.json();
+  assert.equal(unavailable.status, 503);
+  assert.equal(unavailableBody.message, 'Internal server error.');
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const rateLimitBoundary = await fetch(`${baseUrl}/api/learning/coding/execute`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ language: 'PYTHON', code: 'print(1)' }),
+    });
+    assert.equal(rateLimitBoundary.status, 503);
+  }
+  const rateLimited = await fetch(`${baseUrl}/api/learning/coding/execute`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ language: 'PYTHON', code: 'print(1)' }),
+  });
+  assert.equal(rateLimited.status, 429);
+});
+
 test('/api/education serves populated My Learning and Lab Experiments sections', async () => {
   const expectedCounts = new Map([
     ['subjects', 18],

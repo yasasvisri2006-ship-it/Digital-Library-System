@@ -92,15 +92,33 @@ describe('public read-only learning pages', () => {
     expect(await screen.findByRole('heading', { name: 'Guided problem bank' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add problem' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Python code editor' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Editor language' })).toHaveValue('python');
+    expect(screen.getByRole('combobox', { name: 'Editor language' })).toHaveValue('PYTHON');
     expect(screen.getByRole('button', { name: 'Run Code' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Clear Output' })).toBeInTheDocument();
-    expect(screen.getByText(/isolated Python sandbox service/)).toBeInTheDocument();
+    expect(screen.getByText(/sent to the administrator-configured Judge0 sandbox/)).toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: 'Python code editor' }), 'print("Hello, World!")');
+    api.post.mockResolvedValue({
+      data: {
+        data: {
+          execution: {
+            stdout: 'Hello, World!\n',
+            stderr: '',
+            exitCode: null,
+            status: 'Accepted',
+            error: null,
+            outputTruncated: false,
+          },
+        },
+      },
+    });
     await user.click(screen.getByRole('button', { name: 'Run Code' }));
-    expect(screen.getByText(/Code was not run\. A secure, isolated Python sandbox service is not configured/)).toBeInTheDocument();
+    expect(await screen.findByText('Hello, World!')).toBeInTheDocument();
+    expect(api.post).toHaveBeenCalledWith('/learning/coding/execute', {
+      language: 'PYTHON',
+      code: 'print("Hello, World!")',
+    });
     await user.click(screen.getByRole('button', { name: 'Clear Output' }));
-    expect(screen.getByText(/Configure an isolated Python sandbox service/)).toBeInTheDocument();
+    expect(screen.getByText(/Output will appear here/)).toBeInTheDocument();
   });
 
   it('opens a public tool guide while keeping its saved notes private', async () => {

@@ -36,6 +36,22 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optionalNonEmptyString,
   SUPABASE_STORAGE_BUCKET: optionalNonEmptyString,
   PORTFOLIO_STORAGE_DIR: optionalNonEmptyString,
+  JUDGE0_URL: z.preprocess(
+    (value) => value === '' ? undefined : value,
+    z.string().url().refine((value) => {
+      const parsedUrl = new URL(value);
+      return ['http:', 'https:'].includes(parsedUrl.protocol)
+        && !parsedUrl.username
+        && !parsedUrl.password
+        && !parsedUrl.search
+        && !parsedUrl.hash;
+    }, 'JUDGE0_URL must be an HTTP(S) base URL without credentials, query, or fragment.').optional(),
+  ),
+  JUDGE0_API_KEY: optionalNonEmptyString,
+  JUDGE0_PYTHON_LANGUAGE_ID: z.preprocess(
+    (value) => value === '' || value === undefined ? undefined : value,
+    z.coerce.number().int().positive().optional(),
+  ),
   DATABASE_URL: z.string().min(1).refine(
     (value) => value.startsWith('postgresql://') || value.startsWith('postgres://'),
     'DATABASE_URL must use the postgresql:// or postgres:// scheme',
@@ -96,8 +112,19 @@ const env = Object.freeze({
     parsedEnv.data.PORTFOLIO_STORAGE_DIR
       || path.resolve(__dirname, '../../storage/portfolio'),
   ),
+  judge0Url: parsedEnv.data.JUDGE0_URL?.replace(/\/+$/, ''),
+  judge0ApiKey: parsedEnv.data.JUDGE0_API_KEY,
+  judge0PythonLanguageId: parsedEnv.data.JUDGE0_PYTHON_LANGUAGE_ID,
   nodeEnv: parsedEnv.data.NODE_ENV,
 });
+
+if (env.judge0Url && env.nodeEnv === 'production' && !env.judge0Url.startsWith('https://')) {
+  throw new Error('Invalid server configuration: JUDGE0_URL must use HTTPS in production');
+}
+
+if (env.judge0Url && !env.judge0PythonLanguageId) {
+  throw new Error('Invalid server configuration: JUDGE0_PYTHON_LANGUAGE_ID is required when JUDGE0_URL is set');
+}
 
 if (env.nodeEnv === 'production' && env.academicResourceStorageProvider === 'local') {
   throw new Error('Invalid server configuration: private file storage requires ACADEMIC_RESOURCE_STORAGE_PROVIDER=r2 or supabase in production');

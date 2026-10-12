@@ -28,6 +28,11 @@ const codingProblemUpdateSchema = z.object({
   isBookmarked: z.boolean().optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'Provide at least one coding problem field to update.');
 
+const codeExecutionSchema = z.object({
+  language: z.literal('PYTHON'),
+  code: z.string().min(1).max(12000),
+}).strict();
+
 const progressSchema = z.object({
   notes: z.string().max(8000).optional(),
   isCompleted: z.boolean().optional(),
@@ -64,5 +69,6 @@ module.exports = {
   cloudLabUpdateSchema,
   codingProblemSchema,
   codingProblemUpdateSchema,
+  codeExecutionSchema,
   progressSchema,
 };

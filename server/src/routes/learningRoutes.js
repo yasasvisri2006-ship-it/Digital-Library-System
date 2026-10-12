@@ -1,5 +1,6 @@
 const express = require('express');
 const learningController = require('../controllers/learningController');
+const { codeExecutionRateLimiter } = require('../middleware/codeExecutionRateLimiter');
 const { authenticate } = require('../middleware/authenticate');
 const { requireRole } = require('../middleware/requireRole');
 const { requireTrustedOrigin } = require('../middleware/requireTrustedOrigin');
@@ -9,6 +10,7 @@ const {
   cloudCertificateSchema,
   cloudLabSchema,
   cloudLabUpdateSchema,
+  codeExecutionSchema,
   codingProblemSchema,
   codingProblemUpdateSchema,
   progressSchema,
@@ -19,6 +21,13 @@ router.use(authenticate, requireRole('STUDENT'));
 
 router.get('/coding/problems', learningController.listCodingProblems);
 router.get('/coding/history', learningController.listCodingHistory);
+router.post(
+  '/coding/execute',
+  requireTrustedOrigin,
+  codeExecutionRateLimiter,
+  validateRequest(codeExecutionSchema),
+  learningController.executeCodingCode,
+);
 router.post('/coding/problems', requireTrustedOrigin, validateRequest(codingProblemSchema), learningController.createCodingProblem);
 router.patch(
   '/coding/problems/:problemId',

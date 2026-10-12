@@ -73,3 +73,26 @@ test('production Supabase configuration starts without local storage directories
     SUPABASE_STORAGE_BUCKET: 'academic-files',
   }), '');
 });
+
+test('Judge0 configuration requires an HTTPS URL in production and a Python language ID', () => {
+  assert.throws(
+    () => loadEnv({ JUDGE0_URL: 'https://judge0.example.test' }),
+    (error) => error.stderr.includes('JUDGE0_PYTHON_LANGUAGE_ID is required'),
+  );
+  assert.throws(
+    () => loadEnv({
+      JUDGE0_URL: 'http://judge0.example.test',
+      JUDGE0_PYTHON_LANGUAGE_ID: '109',
+    }),
+    (error) => error.stderr.includes('JUDGE0_URL must use HTTPS in production'),
+  );
+  assert.equal(loadEnv({
+    JUDGE0_URL: 'https://judge0.example.test/',
+    JUDGE0_PYTHON_LANGUAGE_ID: '109',
+    JUDGE0_API_KEY: 'test-only-key',
+    ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'supabase',
+    SUPABASE_URL: 'https://project-ref.supabase.co',
+    SUPABASE_SERVICE_ROLE_KEY: 'test-only-storage-key',
+    SUPABASE_STORAGE_BUCKET: 'private-files',
+  }), '');
+});

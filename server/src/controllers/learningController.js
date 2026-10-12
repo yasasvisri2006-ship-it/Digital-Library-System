@@ -1,4 +1,5 @@
 const learningService = require('../services/learningService');
+const codeExecutionService = require('../services/codeExecutionService');
 const { sendSuccess } = require('../utils/apiResponse');
 const { ApiError } = require('../utils/ApiError');
 
@@ -41,6 +42,11 @@ async function deleteCodingProblem(req, res) {
 async function listCodingHistory(req, res) {
   const history = await learningService.listCodingHistory(req.auth.id);
   sendSuccess(res, { message: 'Coding practice history loaded.', data: { history } });
+}
+
+async function executeCodingCode(req, res) {
+  const execution = await codeExecutionService.executePython(req.body.code);
+  sendSuccess(res, { message: 'Code execution completed.', data: { execution } });
 }
 
 async function getToolProgress(req, res) {
@@ -100,6 +106,7 @@ module.exports = {
   deleteCloudCertificate,
   deleteCloudLabNote,
   deleteCodingProblem,
+  executeCodingCode,
   getCloudLearning,
   getToolProgress,
   listCodingHistory,

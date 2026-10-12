@@ -44,7 +44,9 @@ export default function CodingPracticePage() {
   const [editing, setEditing] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editorCode, setEditorCode] = useState('');
+  const [editorLanguage, setEditorLanguage] = useState('PYTHON');
   const [editorOutput, setEditorOutput] = useState('');
+  const [editorRunning, setEditorRunning] = useState(false);
 
   const load = useCallback(async (signal) => {
     if (!user) {
@@ -80,8 +82,42 @@ export default function CodingPracticePage() {
 
   const completionText = useMemo(() => `${progress.completedCount} of ${progress.totalCount} completed`, [progress]);
 
-  function runEditorCode() {
-    setEditorOutput('Code was not run. A secure, isolated Python sandbox service is not configured for this application.');
+  async function runEditorCode() {
+    if (!editorCode.trim() || editorRunning) return;
+    setEditorRunning(true);
+    setEditorOutput('Running in the isolated Python sandbox...');
+    try {
+      const { data } = await api.post('/learning/coding/execute', {
+        language: editorLanguage,
+        code: editorCode,
+      });
+      const result = data.data.execution;
+      const hasSucceeded = result.status === 'Accepted' && !result.error;
+      if (hasSucceeded && !result.stderr) {
+        setEditorOutput(`${result.stdout || '(Program completed with no output.)'}${result.outputTruncated ? '\n[Output truncated to the allowed size.]' : ''}`);
+      } else {
+        setEditorOutput([
+          `Execution status: ${result.status}`,
+          `Exit code: ${result.exitCode ?? 'unavailable'}`,
+          `Standard output:\n${result.stdout || '(none)'}`,
+          `Standard error:\n${result.stderr || '(none)'}`,
+          result.error ? `Execution error:\n${result.error}` : '',
+          result.outputTruncated ? 'Output was truncated to the allowed size.' : '',
+        ].filter(Boolean).join('\n\n'));
+      }
+    } catch (error) {
+      const status = error.response?.status;
+      const message = status === 503
+        ? 'The Python sandbox is unavailable or not configured. Contact the administrator.'
+        : status === 504
+          ? 'Python execution timed out while waiting for the sandbox. Try again.'
+          : status === 502
+            ? 'The Python sandbox returned an invalid response. Try again or contact the administrator.'
+            : responseMessage(error);
+      setEditorOutput(`Execution unavailable: ${message}`);
+    } finally {
+      setEditorRunning(false);
+    }
   }
 
   async function saveProblem(values) {
@@ -132,12 +168,12 @@ export default function CodingPracticePage() {
         {user && <button className="learning-button learning-heading-action" type="button" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus size={17} /> Add problem</button>}
       </header>
 
-      <div className="learning-disclaimer"><Code2 size={17} /><p><strong>Practice tracker only.</strong> This portal does not execute code or connect to an external compiler. Use a trusted local or sandboxed environment for code execution; never run untrusted code on an application server.</p></div>
+      <div className="learning-disclaimer"><Code2 size={17} /><p><strong>Isolated Python execution.</strong> Submitted code is sent to the administrator-configured Judge0 sandbox. Do not include secrets or private data; code is not run in this application server.</p></div>
       <section className="learning-panel code-playground" aria-labelledby="code-playground-heading">
         <div className="learning-panel-heading">
           <div><span className="section-eyebrow">SAFE PRACTICE EDITOR</span><h2 id="code-playground-heading">Python code editor</h2></div>
           <label className="code-language-select">Language
-            <select aria-label="Editor language" defaultValue="python"><option value="python">Python</option></select>
+            <select aria-label="Editor language" value={editorLanguage} onChange={(event) => setEditorLanguage(event.target.value)}><option value="PYTHON">Python</option></select>
           </label>
         </div>
         <label className="code-editor-label" htmlFor="practice-code">Your code</label>
@@ -154,7 +190,7 @@ export default function CodingPracticePage() {
           autoCorrect="off"
         />
         <div className="code-editor-actions">
-          <button className="learning-button" type="button" onClick={runEditorCode}><Play size={14} /> Run Code</button>
+          <button className="learning-button" type="button" onClick={runEditorCode} disabled={editorRunning || !editorCode.trim()}><Play size={14} /> {editorRunning ? 'Running...' : 'Run Code'}</button>
           <button className="learning-button is-secondary" type="button" onClick={() => setEditorOutput('')}>Clear Output</button>
         </div>
         <div className="code-output-panel" aria-live="polite">
