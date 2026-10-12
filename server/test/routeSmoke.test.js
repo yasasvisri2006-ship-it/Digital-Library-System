@@ -11,6 +11,7 @@ process.env.ACADEMIC_RESOURCE_STORAGE_PROVIDER = 'local';
 const { records } = require('../src/data/educationalMaterials');
 const { prisma } = require('../src/config/prisma');
 const { env } = require('../src/config/env');
+const codeExecutionService = require('../src/services/codeExecutionService');
 const app = require('../src/app');
 const privateFileStorage = require('../src/services/privateFileStorage');
 
@@ -31,6 +32,7 @@ const originalFindUnique = prisma.user.findUnique;
 const originalFindMany = prisma.educationalMaterial.findMany;
 const originalMaterialFindUnique = prisma.educationalMaterial.findUnique;
 const originalOpen = privateFileStorage.open;
+const originalExecutePython = codeExecutionService.executePython;
 
 before(async () => {
   prisma.user.findUnique = async ({ select }) => (
@@ -90,6 +92,7 @@ after(async () => {
   prisma.educationalMaterial.findMany = originalFindMany;
   prisma.educationalMaterial.findUnique = originalMaterialFindUnique;
   privateFileStorage.open = originalOpen;
+  codeExecutionService.executePython = originalExecutePython;
   if (server) {
     server.closeAllConnections();
     await new Promise((resolve, reject) => {
@@ -123,7 +126,9 @@ test('Python code execution requires an authenticated student, validates request
     headers: { 'content-type': 'application/json', origin: 'http://localhost:5173' },
     body: JSON.stringify({ language: 'PYTHON', code: 'print(1)' }),
   });
+  const unauthenticatedBody = await unauthenticated.json();
   assert.equal(unauthenticated.status, 401);
+  assert.equal(unauthenticatedBody.message, 'Authentication token is missing.');
 
   const token = jwt.sign(
     { id: testUser.id, tokenVersion: testUser.tokenVersion },
@@ -142,6 +147,24 @@ test('Python code execution requires an authenticated student, validates request
   });
   assert.equal(invalidRequest.status, 400);
 
+  codeExecutionService.executePython = async (code) => ({
+    stdout: code === 'print(1)' ? '1\n' : '',
+    stderr: '',
+    exitCode: 0,
+    status: 'Accepted',
+    error: null,
+    outputTruncated: false,
+  });
+  const successful = await fetch(`${baseUrl}/api/learning/coding/execute`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ language: 'PYTHON', code: 'print(1)' }),
+  });
+  const successfulBody = await successful.json();
+  assert.equal(successful.status, 200);
+  assert.equal(successfulBody.data.execution.stdout, '1\n');
+  codeExecutionService.executePython = originalExecutePython;
+
   const unavailable = await fetch(`${baseUrl}/api/learning/coding/execute`, {
     method: 'POST',
     headers,
@@ -151,7 +174,7 @@ test('Python code execution requires an authenticated student, validates request
   assert.equal(unavailable.status, 503);
   assert.equal(unavailableBody.message, 'Internal server error.');
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     const rateLimitBoundary = await fetch(`${baseUrl}/api/learning/coding/execute`, {
       method: 'POST',
       headers,

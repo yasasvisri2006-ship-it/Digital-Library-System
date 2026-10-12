@@ -6,7 +6,7 @@ const SESSION_DURATION_MS = 60 * 60 * 1000;
 const sessionCookieOptions = Object.freeze({
   httpOnly: true,
   secure: env.authCookieSecure || env.nodeEnv === 'production',
-  sameSite: 'strict',
+  sameSite: env.nodeEnv === 'production' ? 'none' : 'strict',
   path: '/api',
 });
 
