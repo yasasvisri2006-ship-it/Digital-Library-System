@@ -16,16 +16,10 @@ import { useAuth } from '../context/AuthContext';
 import { getInitials, getProfilePhotoUrl } from '../services/profilePhoto';
 
 function BrandMark() {
-  const [hasLogo, setHasLogo] = useState(true);
-
   return (
     <div className="header-branding">
-      <div className="university-lockup" aria-label="Mohan Babu University branding">
-        {hasLogo ? (
-          <img className="university-logo-image" src="/images/mbu-logo.png" alt="Mohan Babu University" onError={() => setHasLogo(false)} />
-        ) : (
-          <span className="university-mark"><strong>MBU</strong><small>LOGO</small></span>
-        )}
+      <div className="university-lockup" aria-label="Data Science Library branding">
+        <img className="university-logo-image" src="/images/data-science-library-seal.svg" alt="Data Science Library emblem" />
         <span className="university-copy"><strong>MOHAN BABU</strong><small>UNIVERSITY</small></span>
       </div>
       <span className="branding-divider" />
@@ -177,7 +171,7 @@ function Topbar({ menuOpen, onMenuToggle }) {
         </button>
         <BrandMark />
         <Link to="/dashboard" className="mobile-brand" aria-label="MBU Digital Library home">
-          <img src="/images/mbu-logo.png" alt="" />
+          <img src="/images/data-science-library-seal.svg" alt="" />
           <BookOpen size={18} strokeWidth={1.8} />
           <span><b>DIGITAL LIBRARY</b><small>Data Science Library</small></span>
         </Link>

@@ -496,7 +496,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 }
 .university-mark strong { margin-top: -4px; font-size: 10px; }
 .university-mark small { position: absolute; bottom: 3px; color: #b18d94; font-family: Inter, "Segoe UI", Arial, sans-serif; font-size: 5px; letter-spacing: .1em; }
-.university-logo-image { display: block; width: 156px; height: 72px; flex: none; object-fit: contain; }
+.university-logo-image { display: block; width: 62px; height: 62px; flex: none; border-radius: 50%; object-fit: cover; }
 .university-lockup .university-copy { display: none; }
 .university-copy { display: flex; flex-direction: column; gap: 2px; }
 .university-copy strong { color: #971a3f; font-family: Georgia, serif; font-size: 15px; line-height: 1; }
@@ -644,7 +644,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .header-branding { gap: 10px; }
   .university-lockup { gap: 5px; }
   .university-mark { width: 34px; height: 42px; font-size: 8px; }
-  .university-logo-image { width: 125px; height: 58px; }
+  .university-logo-image { width: 54px; height: 54px; }
   .university-copy strong { font-size: 11px; }
   .university-copy small { font-size: 6px; }
   .branding-divider { height: 38px; }
@@ -1116,7 +1116,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .homepage-nav-links { gap: 10px; }
   .homepage-nav-links a { font-size: 9px; }
   .homepage-topbar .header-branding { gap: 12px; }
-  .homepage-topbar .university-logo-image { width: 124px; }
+  .homepage-topbar .university-logo-image { width: 58px; height: 58px; }
   .homepage-topbar .library-lockup strong { font-size: 17px; }
   .homepage-topbar .library-lockup small { font-size: 9px; }
   .homepage-topbar .topbar-actions { gap: 7px; }
@@ -2436,7 +2436,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
 }
 @media (max-width: 700px) {
   .mobile-brand { gap: 4px; }
-  .mobile-brand > img { width: 38px; height: 36px; }
+  .mobile-brand > img { width: 37px; height: 37px; flex: none; border-radius: 50%; object-fit: cover; }
   .mobile-brand b { font-size: 9px; }
   .mobile-brand small { font-size: 8px; }
   .ds-dashboard-main { margin-top: 0; }

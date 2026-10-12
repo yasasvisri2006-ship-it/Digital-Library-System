@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Data Science Library emblem</title>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdfd"/>
+      <stop offset="1" stop-color="#f9e8ed"/>
+    </linearGradient>
+    <linearGradient id="wine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a71945"/>
+      <stop offset="1" stop-color="#70152f"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="61" fill="url(#paper)" stroke="#a71945" stroke-width="3"/>
+  <circle cx="64" cy="64" r="53" fill="none" stroke="#d7a0ad" stroke-width="1.4"/>
+  <path d="M64 17v8m0 78v8M17 64h8m78 0h8M31 31l6 6m54 54 6 6m0-66-6 6m-54 54-6 6" fill="none" stroke="#c2778c" stroke-linecap="round" stroke-width="2"/>
+  <path d="M34 44c11-5 21-3 30 5 9-8 19-10 30-5v32c-11-5-21-3-30 5-9-8-19-10-30-5z" fill="#fff" stroke="url(#wine)" stroke-linejoin="round" stroke-width="3"/>
+  <path d="M64 49v32M40 51c8-2 14 0 19 4m-19 2c8-2 14 0 19 4m-19 2c8-2 14 0 19 4m30-16c-8-2-14 0-19 4m19 2c-8-2-14 0-19 4m19 2c-8-2-14 0-19 4" fill="none" stroke="#d7a0ad" stroke-linecap="round" stroke-width="1.7"/>
+  <path d="M48 38h7V27h8v11h5V22h8v16h6v-7h8v15c-9-3-18-1-26 6-8-7-17-9-26-6V39h10z" fill="url(#wine)"/>
+  <path d="M51 92h26m-21 6h16" fill="none" stroke="#a71945" stroke-linecap="round" stroke-width="2"/>
+  <circle cx="64" cy="104" r="2.5" fill="#a71945"/>
+</svg>
