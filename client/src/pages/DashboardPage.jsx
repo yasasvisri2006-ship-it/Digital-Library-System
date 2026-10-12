@@ -89,6 +89,9 @@ function StudentIdentityCard() {
   const { user } = useAuth();
   const displayedUser = user?.role === 'student' ? user : publicDashboardProfile;
   const studentProfile = displayedUser.studentProfile || {};
+  const displayedBranch = studentProfile.branch === 'CSE (DS)'
+    ? 'BTech CSE (DS)'
+    : studentProfile.branch || 'Not provided';
   const [hasLogo, setHasLogo] = useState(true);
   const [failedPhotoUrl, setFailedPhotoUrl] = useState('');
   const studentPhotoUrl = displayedUser.isDemo
@@ -111,8 +114,7 @@ function StudentIdentityCard() {
           </span>
           <div className="ds-id-fields">
             <p><span>Name:</span><strong>{displayedUser.name}</strong></p>
-            <p><span>Branch:</span><strong>{studentProfile.branch || 'Not provided'}</strong></p>
-            <p><span>Department:</span><strong>{studentProfile.department || 'Not provided'}</strong></p>
+            <p><span>Branch:</span><strong>{displayedBranch}</strong></p>
           </div>
         </div>
         <div className="ds-id-bottom">

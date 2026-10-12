@@ -127,11 +127,13 @@ describe('authentication screens', () => {
     expect(screen.getByText('Peta Yasasvisri')).toBeInTheDocument();
     expect(screen.queryByText('DEMO PREVIEW · SAMPLE PROFILE')).not.toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Peta Yasasvisri profile' })).toHaveAttribute('src', '/images/student-photo.png');
-    expect(screen.getByText('CSE (DS)')).toBeInTheDocument();
-    expect(screen.getByText('Data Science')).toBeInTheDocument();
+    expect(screen.getByText('BTech CSE (DS)')).toBeInTheDocument();
     expect(screen.getByText('25302A030001')).toBeInTheDocument();
     const identityCard = screen.getByText('Registration Number:').closest('.ds-id-card');
     expect(screen.queryByText('STUDENT IDENTITY CARD')).not.toBeInTheDocument();
+    expect(identityCard).not.toHaveTextContent('Department:');
+    expect(screen.getAllByText('DIGITAL LIBRARY')).toHaveLength(2);
+    expect(screen.getAllByText('Data Science Library')).toHaveLength(3);
     expect(identityCard).toHaveTextContent('Registration Number:25302A030001');
     expect(identityCard).not.toHaveTextContent('Student ID:');
     const facultyCard = screen.getByRole('heading', { name: 'Faculty Information' }).closest('.ds-faculty-card');

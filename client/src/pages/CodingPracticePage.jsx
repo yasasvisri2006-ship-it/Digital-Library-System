@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Bookmark, Check, Circle, Code2, Filter, Pencil, Plus, Search, Trash2, Trophy } from 'lucide-react';
+import { ArrowUpRight, Bookmark, Check, Circle, Code2, Filter, Pencil, Play, Plus, Search, Trash2, Trophy } from 'lucide-react';
 import CodingProblemForm from '../components/CodingProblemForm';
 import api from '../services/api';
 import EducationalCatalogFeed from '../components/EducationalCatalogFeed';
@@ -43,6 +43,8 @@ export default function CodingPracticePage() {
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [editorCode, setEditorCode] = useState('');
+  const [editorOutput, setEditorOutput] = useState('');
 
   const load = useCallback(async (signal) => {
     if (!user) {
@@ -77,6 +79,10 @@ export default function CodingPracticePage() {
   }, [load]);
 
   const completionText = useMemo(() => `${progress.completedCount} of ${progress.totalCount} completed`, [progress]);
+
+  function runEditorCode() {
+    setEditorOutput('Code was not run. A secure, isolated Python sandbox service is not configured for this application.');
+  }
 
   async function saveProblem(values) {
     setSaving(true);
@@ -127,6 +133,35 @@ export default function CodingPracticePage() {
       </header>
 
       <div className="learning-disclaimer"><Code2 size={17} /><p><strong>Practice tracker only.</strong> This portal does not execute code or connect to an external compiler. Use a trusted local or sandboxed environment for code execution; never run untrusted code on an application server.</p></div>
+      <section className="learning-panel code-playground" aria-labelledby="code-playground-heading">
+        <div className="learning-panel-heading">
+          <div><span className="section-eyebrow">SAFE PRACTICE EDITOR</span><h2 id="code-playground-heading">Python code editor</h2></div>
+          <label className="code-language-select">Language
+            <select aria-label="Editor language" defaultValue="python"><option value="python">Python</option></select>
+          </label>
+        </div>
+        <label className="code-editor-label" htmlFor="practice-code">Your code</label>
+        <textarea
+          id="practice-code"
+          aria-label="Python code editor"
+          className="code-editor-input"
+          value={editorCode}
+          onChange={(event) => setEditorCode(event.target.value)}
+          placeholder={'print("Hello, World!")'}
+          spellCheck="false"
+          autoCapitalize="off"
+          autoComplete="off"
+          autoCorrect="off"
+        />
+        <div className="code-editor-actions">
+          <button className="learning-button" type="button" onClick={runEditorCode}><Play size={14} /> Run Code</button>
+          <button className="learning-button is-secondary" type="button" onClick={() => setEditorOutput('')}>Clear Output</button>
+        </div>
+        <div className="code-output-panel" aria-live="polite">
+          <strong>Output</strong>
+          <pre>{editorOutput || 'Output will appear here. Configure an isolated Python sandbox service with CPU/memory/time limits and no access to application secrets, private files, or internal network.'}</pre>
+        </div>
+      </section>
       <EducationalCatalogFeed section="coding-practice" title="Guided problem bank" description="Beginner-to-intermediate Python, C, C++, Java, SQL, data-structure, and algorithm problems with solution explanations." />
       {user && <>
       {pageError && <p className="academic-message is-error" role="alert">{pageError}</p>}

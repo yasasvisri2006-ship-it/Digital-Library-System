@@ -31,7 +31,7 @@ function BrandMark() {
       <span className="branding-divider" />
       <div className="library-lockup">
         <BookOpen size={27} strokeWidth={1.7} />
-        <span><strong>DIGITAL LIBRARY</strong></span>
+        <span><strong>DIGITAL LIBRARY</strong><small>Data Science Library</small></span>
       </div>
     </div>
   );
@@ -166,7 +166,8 @@ function Topbar({ onMenuOpen }) {
         <BrandMark />
         <Link to="/dashboard" className="mobile-brand" aria-label="MBU Digital Library home">
           <img src="/images/mbu-logo.png" alt="" />
-          <span>MBU <b>Digital Library</b></span>
+          <BookOpen size={18} strokeWidth={1.8} />
+          <span><b>DIGITAL LIBRARY</b><small>Data Science Library</small></span>
         </Link>
       </div>
 

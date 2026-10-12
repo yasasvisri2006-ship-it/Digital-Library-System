@@ -1,4 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../services/api';
@@ -77,6 +78,7 @@ describe('public read-only learning pages', () => {
   });
 
   it('shows tools, cloud notes, and coding resources without private progress requests', async () => {
+    const user = userEvent.setup();
     await renderRoute('/tools', <ToolsPage />);
     expect(await screen.findByRole('heading', { name: 'Practical tool examples' })).toBeInTheDocument();
     cleanup();
@@ -89,6 +91,16 @@ describe('public read-only learning pages', () => {
     await renderRoute('/coding-practice', <CodingPracticePage />);
     expect(await screen.findByRole('heading', { name: 'Guided problem bank' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add problem' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Python code editor' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Editor language' })).toHaveValue('python');
+    expect(screen.getByRole('button', { name: 'Run Code' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear Output' })).toBeInTheDocument();
+    expect(screen.getByText(/isolated Python sandbox service/)).toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: 'Python code editor' }), 'print("Hello, World!")');
+    await user.click(screen.getByRole('button', { name: 'Run Code' }));
+    expect(screen.getByText(/Code was not run\. A secure, isolated Python sandbox service is not configured/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Clear Output' }));
+    expect(screen.getByText(/Configure an isolated Python sandbox service/)).toBeInTheDocument();
   });
 
   it('opens a public tool guide while keeping its saved notes private', async () => {
