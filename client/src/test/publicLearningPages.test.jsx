@@ -12,6 +12,7 @@ import ModulesPage from '../pages/ModulesPage';
 import SubjectsPage from '../pages/SubjectsPage';
 import ToolDetailPage from '../pages/ToolDetailPage';
 import ToolsPage from '../pages/ToolsPage';
+import PublicPortfolioPage from '../pages/PublicPortfolioPage';
 
 vi.mock('../services/api', () => ({
   default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -56,6 +57,47 @@ describe('public read-only learning pages', () => {
     await waitFor(() => expect(api.get).not.toHaveBeenCalled());
     return result;
   }
+
+  it('opens an explicitly published resume portfolio without signing in', async () => {
+    api.get.mockResolvedValue({
+      data: {
+        data: {
+          portfolio: {
+            resume: {
+              displayName: 'Peta Yasasvisri',
+              summary: '',
+              contact: null,
+              education: [{
+                institution: 'Mohan Babu University',
+                qualification: 'B.Tech',
+                field: 'CSE (DS)',
+                details: 'Current standing: 3rd Year · 5th Semester',
+              }],
+              skills: [],
+              internships: [],
+              achievements: [],
+              social: {
+                linkedInUrl: 'https://linkedin.com/in/peta-yasasvisri-reddy-28763b379/',
+                githubUrl: 'https://github.com/yasasvisri2006-ship-it',
+              },
+            },
+            projects: [],
+            certificates: [],
+          },
+        },
+      },
+    });
+    render(
+      <MemoryRouter initialEntries={['/portfolio/public-resume']}>
+        <Routes><Route path="/portfolio/:slug" element={<PublicPortfolioPage />} /></Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Peta Yasasvisri' })).toBeInTheDocument();
+    expect(screen.getByText('Mohan Babu University')).toBeInTheDocument();
+    expect(screen.queryByText(/sign in/i)).not.toBeInTheDocument();
+    expect(api.get).toHaveBeenCalledWith('/public/portfolio/public-resume', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  });
 
   it('shows the read-only subject curriculum without requiring a student account', async () => {
     await renderRoute('/my-subjects', <SubjectsPage />);

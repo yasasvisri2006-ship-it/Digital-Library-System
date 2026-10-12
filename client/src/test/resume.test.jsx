@@ -5,7 +5,7 @@ import ResumePage from '../pages/ResumePage';
 import api from '../services/api';
 
 vi.mock('../services/api', () => ({
-  default: { get: vi.fn(), post: vi.fn() },
+  default: { get: vi.fn(), post: vi.fn(), put: vi.fn() },
 }));
 
 afterEach(cleanup);
@@ -43,6 +43,55 @@ it('shows a profile-based resume starter without publishing it', async () => {
   expect(screen.getByDisplayValue('CSE (DS)')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Peta Yasasvisri' })).toBeInTheDocument();
   expect(screen.getByLabelText('Enable my public portfolio page')).not.toBeChecked();
+});
+
+it('publishes only the resume sections selected as safe for public sharing', async () => {
+  const user = userEvent.setup();
+  api.get.mockResolvedValue({
+    data: {
+      data: {
+        resume: {
+          displayName: 'Peta Yasasvisri',
+          email: 'student@example.test',
+          phone: '',
+          location: '',
+          skills: [],
+          education: [{ institution: 'Mohan Babu University', qualification: 'B.Tech', field: 'CSE (DS)' }],
+          internships: [],
+          achievements: [],
+          publicSections: [],
+          isPublic: false,
+          publicSlug: 'public-resume-slug',
+        },
+        projects: [],
+        certificates: [],
+      },
+    },
+  });
+  api.put.mockResolvedValue({
+    data: {
+      data: {
+        resume: {
+          isPublic: true,
+          publicSections: ['education', 'social'],
+          publicSlug: 'public-resume-slug',
+        },
+      },
+    },
+  });
+  render(<ResumePage />);
+
+  await user.click(await screen.findByRole('button', { name: 'Publish resume publicly' }));
+
+  expect(api.put).toHaveBeenCalledWith('/portfolio/resume', expect.objectContaining({
+    isPublic: true,
+    publicSections: ['education', 'social'],
+    email: 'student@example.test',
+  }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Anyone with the link can view it without signing in.');
+  expect(screen.getByLabelText('Enable my public portfolio page')).toBeChecked();
+  expect(screen.getByLabelText('Public portfolio URL')).toHaveValue(`${window.location.origin}/portfolio/public-resume-slug`);
+  expect(screen.queryByRole('button', { name: 'Publish resume publicly' })).not.toBeInTheDocument();
 });
 
 it('loads the resume and opens the browser print flow for PDF export', async () => {

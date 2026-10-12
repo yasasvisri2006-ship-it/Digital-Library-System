@@ -2671,7 +2671,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
   line-height: 1.1;
 }
 @media (min-width: 1001px) {
-  .portal-topbar .portal-search { width: clamp(280px, 24vw, 320px); }
+  .portal-topbar .portal-search { width: clamp(220px, 20vw, 240px); }
 }
 @media (min-width: 821px) and (max-width: 1000px) {
   .portal-topbar .portal-search { width: 250px; }

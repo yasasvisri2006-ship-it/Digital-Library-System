@@ -71,7 +71,7 @@ export default function ResumePage() {
   function addEntry(field, entry) { setResume((current) => ({ ...current, [field]: [...current[field], entry] })); }
   function removeEntry(field, index) { setResume((current) => ({ ...current, [field]: current[field].filter((_, i) => i !== index) })); }
 
-  async function save() {
+  async function save(changes = {}) {
     setSaving(true);
     setError('');
     setMessage('');
@@ -89,12 +89,12 @@ export default function ResumePage() {
         education: resume.education,
         internships: resume.internships,
         achievements: resume.achievements.map((achievement) => achievement.trim()).filter(Boolean),
-        isPublic: resume.isPublic,
-        publicSections: resume.publicSections,
+        isPublic: changes.isPublic ?? resume.isPublic,
+        publicSections: changes.publicSections ?? resume.publicSections,
       };
       const { data } = await api.put('/portfolio/resume', payload);
       setResume((current) => ({ ...current, ...data.data.resume }));
-      setMessage('Resume and privacy settings saved.');
+      setMessage(changes.isPublic ? 'Your resume is public. Anyone with the link can view it without signing in.' : 'Resume and privacy settings saved.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Resume could not be saved.');
     } finally { setSaving(false); }
@@ -252,7 +252,8 @@ export default function ResumePage() {
           <section className="learning-panel resume-visibility">
             <div className="learning-panel-heading"><div><span className="section-eyebrow">PUBLIC PORTFOLIO</span><h2>Privacy & sharing</h2></div>{resume.isPublic ? <Eye size={17} /> : <EyeOff size={17} />}</div>
             <label className="portfolio-checkbox"><input type="checkbox" checked={resume.isPublic} onChange={(event) => set('isPublic', event.target.checked)} /> Enable my public portfolio page</label>
-            <p className="learning-muted">Only resume sections you select, projects you mark public, and certificates you mark public appear on your shareable page. Career applications and private files remain private.</p>
+            <p className="learning-muted">Publish your name, education, and social links for anyone with your portfolio link. Contact details, your uploaded resume PDF, career applications, and private files remain private. Projects and certificates appear only if you separately mark them public.</p>
+            {!resume.isPublic && <button className="learning-button is-secondary" type="button" onClick={() => save({ isPublic: true, publicSections: ['education', 'social'] })} disabled={saving}>{saving ? 'Publishing...' : 'Publish resume publicly'}</button>}
             <div className="resume-public-section-list">{Object.entries(publicSectionLabels).map(([key, label]) => <label className="portfolio-checkbox" key={key}><input type="checkbox" checked={resume.publicSections.includes(key)} onChange={(event) => set('publicSections', event.target.checked ? [...new Set([...resume.publicSections, key])] : resume.publicSections.filter((section) => section !== key))} /> Show {label}</label>)}</div>
             {resume.publicSlug && <div className="resume-share-link"><input aria-label="Public portfolio URL" readOnly value={publicUrl} /><button type="button" className="learning-button is-secondary" onClick={copyPublicLink}><Share2 size={14} /> Copy link</button></div>}
           </section>
