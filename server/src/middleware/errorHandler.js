@@ -70,7 +70,7 @@ function errorHandler(error, req, res, next) {
   }
 
   const statusCode = error instanceof ApiError ? error.statusCode : 500;
-  const message = statusCode >= 500 ? 'Internal server error.' : error.message;
+  const message = statusCode >= 500 && !error.exposeMessage ? 'Internal server error.' : error.message;
 
   if (statusCode >= 500) {
     console.error('Unhandled API error', error);

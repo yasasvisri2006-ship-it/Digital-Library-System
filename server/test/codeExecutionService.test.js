@@ -1,5 +1,6 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
+const { execFileSync } = require('node:child_process');
 const { ApiError } = require('../src/utils/ApiError');
 
 process.env.NODE_ENV = 'test';
@@ -137,4 +138,34 @@ test('reports upstream service errors instead of presenting output as successful
       && error.statusCode === 503
       && error.message === 'The code execution service returned HTTP 503.',
   );
+});
+
+test('reports missing Judge0 authentication clearly without exposing provider response details', () => {
+  const script = `
+    const service = require('./src/services/codeExecutionService');
+    global.fetch = async (_url, options) => {
+      console.log('AUTH_HEADER:' + (options.headers['X-Auth-Token'] || '<missing>'));
+      return new Response(JSON.stringify({ message: 'Authentication token is missing.' }), { status: 401 });
+    };
+    service.executePython('print(1)').then(
+      () => process.exitCode = 1,
+      (error) => console.log('ERROR:' + error.message + '|' + error.exposeMessage),
+    );
+  `;
+  const output = execFileSync(process.execPath, ['-e', script], {
+    cwd: require('node:path').resolve(__dirname, '..'),
+    env: {
+      NODE_ENV: 'test',
+      DATABASE_URL: 'postgresql://localhost/digital_library_test',
+      JWT_SECRET: 'missing-judge0-token-test-secret-at-least-32-chars',
+      JUDGE0_URL: 'https://judge0.example.test',
+      JUDGE0_API_KEY: '',
+      JUDGE0_PYTHON_LANGUAGE_ID: '109',
+    },
+    encoding: 'utf8',
+  });
+
+  assert.match(output, /AUTH_HEADER:<missing>/);
+  assert.match(output, /ERROR:Judge0 rejected its API authentication\..*\|true/);
+  assert.doesNotMatch(output, /Authentication token is missing\./);
 });

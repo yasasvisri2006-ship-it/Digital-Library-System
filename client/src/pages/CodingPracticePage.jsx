@@ -107,8 +107,11 @@ export default function CodingPracticePage() {
       }
     } catch (error) {
       const status = error.response?.status;
-      const message = status === 503
-        ? 'The Python sandbox is unavailable or not configured. Contact the administrator.'
+      const apiMessage = error.response?.data?.message;
+      const message = status === 503 && apiMessage && apiMessage !== 'Internal server error.'
+        ? apiMessage
+        : status === 503
+          ? 'The Python sandbox is unavailable or not configured. Contact the administrator.'
         : status === 504
           ? 'Python execution timed out while waiting for the sandbox. Try again.'
           : status === 502

@@ -59,6 +59,14 @@ async function requestJson(url, options, deadline) {
       },
     });
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new ApiError(
+          503,
+          'Judge0 rejected its API authentication. Verify the backend-only JUDGE0_API_KEY and that this endpoint accepts the X-Auth-Token header.',
+          undefined,
+          { exposeMessage: true },
+        );
+      }
       throw new ApiError(503, `The code execution service returned HTTP ${response.status}.`);
     }
     return await readJsonResponse(response);

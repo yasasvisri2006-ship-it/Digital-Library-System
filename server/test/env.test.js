@@ -89,7 +89,18 @@ test('Judge0 configuration requires an HTTPS URL in production and a Python lang
   assert.equal(loadEnv({
     JUDGE0_URL: 'https://judge0.example.test/',
     JUDGE0_PYTHON_LANGUAGE_ID: '109',
-    JUDGE0_API_KEY: 'test-only-key',
+    ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'supabase',
+    SUPABASE_URL: 'https://project-ref.supabase.co',
+    SUPABASE_SERVICE_ROLE_KEY: 'test-only-storage-key',
+    SUPABASE_STORAGE_BUCKET: 'private-files',
+  }), '');
+});
+
+test('Judge0 API key remains optional only for endpoints configured without authentication', () => {
+  assert.equal(loadEnv({
+    JUDGE0_URL: 'https://judge0.example.test/',
+    JUDGE0_PYTHON_LANGUAGE_ID: '109',
+    JUDGE0_API_KEY: '',
     ACADEMIC_RESOURCE_STORAGE_PROVIDER: 'supabase',
     SUPABASE_URL: 'https://project-ref.supabase.co',
     SUPABASE_SERVICE_ROLE_KEY: 'test-only-storage-key',
