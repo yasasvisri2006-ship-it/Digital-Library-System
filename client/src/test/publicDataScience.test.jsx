@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import DataScienceWorkspacePage from '../pages/DataScienceWorkspacePage';
 import {
   getPublicDataScienceModules,
-  uploadDataScienceMaterial,
+  uploadPublicDataScienceMaterial,
 } from '../services/dataScience';
 
 vi.mock('../context/AuthContext', () => ({
@@ -23,7 +23,7 @@ vi.mock('../services/dataScience', () => ({
   fetchDataScienceFile: vi.fn(),
   updateDataScienceMaterial: vi.fn(),
   updateDataScienceModule: vi.fn(),
-  uploadDataScienceMaterial: vi.fn(),
+  uploadPublicDataScienceMaterial: vi.fn(),
 }));
 
 afterEach(cleanup);
@@ -54,7 +54,7 @@ describe('public Data Science module access', () => {
     expect(screen.queryByRole('button', { name: /add module/i })).not.toBeInTheDocument();
   });
 
-  it('opens a published study material while keeping upload controls owner-only', async () => {
+  it('opens published study materials and allows anonymous uploads', async () => {
     const moduleId = '00000000-0000-4000-8000-000000000093';
     getPublicDataScienceModules.mockResolvedValue([{
       id: moduleId,
@@ -85,22 +85,23 @@ describe('public Data Science module access', () => {
       'href',
       `/modules/data-science/${moduleId}/read/00000000-0000-4000-8000-000000000094`,
     );
-    expect(screen.queryByRole('heading', { name: /upload/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /upload/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Choose a file/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /publish/i })).not.toBeInTheDocument();
     await waitFor(() => expect(getPublicDataScienceModules).toHaveBeenCalled());
   });
 
-  it('uploads the visitor-selected PPT file only when the module owner is authorized', async () => {
+  it('uploads and publishes a visitor-selected PPT without sign-in', async () => {
     const moduleId = '00000000-0000-4000-8000-000000000093';
     getPublicDataScienceModules.mockResolvedValue([{
       id: moduleId,
       number: 1,
       title: 'Module 01',
       isPublic: true,
-      canManage: true,
+      canManage: false,
       materials: [],
     }]);
-    uploadDataScienceMaterial.mockResolvedValue({ isPublished: true, previewError: null });
+    uploadPublicDataScienceMaterial.mockResolvedValue({ isPublished: true, previewError: null });
     const user = userEvent.setup();
 
     render(
@@ -113,10 +114,9 @@ describe('public Data Science module access', () => {
       type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     });
     await user.upload(await screen.findByLabelText(/Choose a file/), selectedFile);
-    await user.click(screen.getByLabelText('Publish for public reading'));
     fireEvent.submit(screen.getByRole('button', { name: 'Upload Material' }).closest('form'));
 
-    expect(uploadDataScienceMaterial).toHaveBeenCalledWith(moduleId, 'lecture-slides', selectedFile, true);
+    expect(uploadPublicDataScienceMaterial).toHaveBeenCalledWith(moduleId, 'lecture-slides', selectedFile);
     expect(await screen.findByText('Study material uploaded and published for public reading.')).toBeInTheDocument();
   });
 });

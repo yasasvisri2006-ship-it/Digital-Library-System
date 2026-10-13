@@ -282,6 +282,15 @@ async function uploadMaterial(ownerId, moduleId, title, file, isPublished = fals
   }
 }
 
+async function uploadPublicMaterial(moduleId, title, file) {
+  const module = await prisma.dataScienceModule.findFirst({
+    where: { id: moduleId, isPublic: true },
+    select: { id: true, ownerId: true },
+  });
+  if (!module) throw new ApiError(404, 'Public Data Science module not found.');
+  return uploadMaterial(module.ownerId, module.id, title, file, true);
+}
+
 async function updateMaterial(ownerId, materialId, changes) {
   const result = await prisma.dataScienceMaterial.updateMany({
     where: { id: materialId, ownerId },
@@ -391,6 +400,7 @@ module.exports = {
   listModules,
   listPublicModules,
   MAX_UPLOAD_SIZE,
+  uploadPublicMaterial,
   updateMaterial,
   updateModule,
   uploadMaterial,

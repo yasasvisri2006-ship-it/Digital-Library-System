@@ -43,6 +43,21 @@ async function uploadMaterial(req, res) {
   });
 }
 
+async function uploadPublicMaterial(req, res) {
+  const material = await dataScienceService.uploadPublicMaterial(
+    req.params.moduleId,
+    req.body.title,
+    req.file,
+  );
+  sendSuccess(res, {
+    statusCode: 201,
+    message: material.previewError
+      ? `Study material uploaded and published. Preview could not be prepared: ${material.previewError}`
+      : 'Study material uploaded and published for public reading.',
+    data: { material },
+  });
+}
+
 async function updateMaterial(req, res) {
   const changes = Object.fromEntries(Object.entries(req.body).filter(([, value]) => value !== undefined));
   const material = await dataScienceService.updateMaterial(req.auth.id, req.params.materialId, changes);
@@ -119,6 +134,7 @@ module.exports = {
   listModules,
   previewMaterial,
   previewPublicMaterial,
+  uploadPublicMaterial,
   updateMaterial,
   updateModule,
   uploadMaterial,

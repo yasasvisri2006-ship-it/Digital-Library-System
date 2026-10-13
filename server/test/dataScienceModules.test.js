@@ -164,6 +164,42 @@ test('keeps an actual PPTX download available and reports missing conversion cle
   );
 });
 
+test('allows public uploads to public modules and always publishes them', async () => {
+  prisma.dataScienceModule.findFirst = async ({ where }) => {
+    if (where.id === moduleId && where.isPublic) return { id: moduleId, ownerId };
+    if (where.id === moduleId && where.ownerId === ownerId) return { id: moduleId };
+    return null;
+  };
+
+  const result = await dataScienceService.uploadPublicMaterial(
+    moduleId,
+    'Visitor PPT notes',
+    {
+      originalname: 'visitor-notes.txt',
+      buffer: Buffer.from('public study material'),
+      size: 21,
+      mimetype: 'text/plain',
+    },
+  );
+
+  const saved = storedMaterials.get(result.id);
+  assert.equal(saved.ownerId, ownerId);
+  assert.equal(saved.moduleId, moduleId);
+  assert.equal(saved.isPublished, true);
+  assert.equal(result.isPublished, true);
+
+  prisma.dataScienceModule.findFirst = async () => null;
+  await assert.rejects(
+    dataScienceService.uploadPublicMaterial(moduleId, 'No module', {
+      originalname: 'notes.txt',
+      buffer: Buffer.from('public study material'),
+      size: 21,
+      mimetype: 'text/plain',
+    }),
+    { statusCode: 404 },
+  );
+});
+
 test('rejects invalid file contents and material access outside the owner account', async () => {
   await assert.rejects(
     uploadFile('notes.pdf', Buffer.from('not a pdf')),

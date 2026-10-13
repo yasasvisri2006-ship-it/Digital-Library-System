@@ -12,6 +12,7 @@ const { records } = require('../src/data/educationalMaterials');
 const { prisma } = require('../src/config/prisma');
 const { env } = require('../src/config/env');
 const codeExecutionService = require('../src/services/codeExecutionService');
+const dataScienceService = require('../src/services/dataScienceService');
 const app = require('../src/app');
 const privateFileStorage = require('../src/services/privateFileStorage');
 
@@ -35,6 +36,7 @@ const originalFindMany = prisma.educationalMaterial.findMany;
 const originalMaterialFindUnique = prisma.educationalMaterial.findUnique;
 const originalOpen = privateFileStorage.open;
 const originalExecutePython = codeExecutionService.executePython;
+const originalPublicDataScienceUpload = dataScienceService.uploadPublicMaterial;
 
 before(async () => {
   prisma.user.findUnique = async ({ select }) => (
@@ -110,6 +112,7 @@ after(async () => {
   prisma.educationalMaterial.findUnique = originalMaterialFindUnique;
   privateFileStorage.open = originalOpen;
   codeExecutionService.executePython = originalExecutePython;
+  dataScienceService.uploadPublicMaterial = originalPublicDataScienceUpload;
   if (server) {
     server.closeAllConnections();
     await new Promise((resolve, reject) => {
@@ -155,6 +158,40 @@ test('Data Science public reads work without sign-in while owner writes remain p
   assert.equal(await publicPreview.text(), 'private-bucket-file-through-api');
   assert.equal(privateRead.status, 401);
   assert.equal(write.status, 401);
+});
+
+test('public Data Science uploads accept anonymous uploads from the trusted browser origin', async () => {
+  let uploadArguments;
+  dataScienceService.uploadPublicMaterial = async (...args) => {
+    uploadArguments = args;
+    return {
+      id: '00000000-0000-4000-8000-000000000095',
+      title: args[1],
+      originalFileName: args[2].originalname,
+      isPublished: true,
+      previewError: null,
+    };
+  };
+
+  const form = new FormData();
+  form.append('title', 'Visitor presentation');
+  form.append('file', new Blob(['presentation content'], { type: 'text/plain' }), 'visitor.txt');
+  const response = await fetch(
+    `${baseUrl}/api/data-science/public/modules/00000000-0000-4000-8000-000000000093/materials`,
+    {
+      method: 'POST',
+      headers: { origin: 'http://localhost:5173' },
+      body: form,
+    },
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 201);
+  assert.equal(body.data.material.isPublished, true);
+  assert.equal(uploadArguments[0], '00000000-0000-4000-8000-000000000093');
+  assert.equal(uploadArguments[1], 'Visitor presentation');
+  assert.equal(uploadArguments[2].originalname, 'visitor.txt');
+  assert.equal(uploadArguments[2].buffer.toString(), 'presentation content');
 });
 
 test('Python code execution requires an authenticated student, validates requests, and reports missing sandbox configuration', async () => {

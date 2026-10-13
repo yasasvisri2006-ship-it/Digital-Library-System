@@ -33,6 +33,14 @@ export async function uploadDataScienceMaterial(moduleId, title, file, isPublish
   return data.data.material;
 }
 
+export async function uploadPublicDataScienceMaterial(moduleId, title, file) {
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('file', file);
+  const { data } = await api.post(`/data-science/public/modules/${moduleId}/materials`, formData);
+  return data.data.material;
+}
+
 export async function updateDataScienceMaterial(materialId, changes) {
   const { data } = await api.patch(`/data-science/materials/${materialId}`, changes);
   return data.data.material;

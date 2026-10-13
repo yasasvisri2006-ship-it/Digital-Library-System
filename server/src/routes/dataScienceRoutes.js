@@ -5,6 +5,7 @@ const { dataScienceFileUpload } = require('../middleware/dataScienceFileUpload')
 const { optionalAuthenticate } = require('../middleware/optionalAuthenticate');
 const { requireRole } = require('../middleware/requireRole');
 const { requireTrustedOrigin } = require('../middleware/requireTrustedOrigin');
+const { publicDataScienceUploadRateLimiter } = require('../middleware/rateLimiter');
 const { validateRequest } = require('../middleware/validateRequest');
 const { validateUuidParam } = require('../middleware/validateUuidParam');
 const { materialUpdateSchema, materialUploadSchema, moduleUpdateSchema } = require('../validators/dataScienceValidators');
@@ -23,6 +24,15 @@ router.get(
   validateUuidParam('moduleId'),
   validateUuidParam('materialId'),
   controller.previewPublicMaterial,
+);
+router.post(
+  '/public/modules/:moduleId/materials',
+  requireTrustedOrigin,
+  publicDataScienceUploadRateLimiter,
+  validateUuidParam('moduleId'),
+  dataScienceFileUpload.single('file'),
+  validateRequest(materialUploadSchema),
+  controller.uploadPublicMaterial,
 );
 
 router.use(authenticate, requireRole('STUDENT'));

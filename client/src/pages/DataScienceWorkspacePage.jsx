@@ -16,9 +16,9 @@ import {
   deleteDataScienceModule,
   fetchDataScienceFile,
   getPublicDataScienceModules,
+  uploadPublicDataScienceMaterial,
   updateDataScienceMaterial,
   updateDataScienceModule,
-  uploadDataScienceMaterial,
 } from '../services/dataScience';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -223,7 +223,6 @@ function ModuleDetailPage() {
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
-  const [publishOnUpload, setPublishOnUpload] = useState(false);
 
   const loadModules = useCallback(async (signal) => {
     setLoadError('');
@@ -274,16 +273,13 @@ function ModuleDetailPage() {
     setUploadError('');
     setMessage('');
     try {
-      const uploaded = await uploadDataScienceMaterial(module.id, title.trim(), file, publishOnUpload);
+      const uploaded = await uploadPublicDataScienceMaterial(module.id, title.trim(), file);
       setFile(null);
       setTitle('');
-      setPublishOnUpload(false);
       form.reset();
       setMessage(uploaded.previewError
         ? `File uploaded. ${uploaded.previewError}`
-        : uploaded.isPublished
-          ? 'Study material uploaded and published for public reading.'
-          : 'Study material uploaded privately. Publish it when it is ready for public reading.');
+        : 'Study material uploaded and published for public reading.');
       await loadModules();
     } catch (requestError) {
       setUploadError(errorMessage(requestError));
@@ -314,17 +310,16 @@ function ModuleDetailPage() {
         }}><Pencil size={14} /> Rename Module</button>}
       </header>
 
-      {module.canManage && <form className="ds-upload-panel" onSubmit={upload}>
-        <div className="ds-upload-heading"><span className="ds-upload-icon"><Upload size={18} /></span><div><h2>Upload PPT / PDF / Study Material</h2><p>Choose a file from this computer. Private uploads remain hidden until published. Maximum file size: 50 MB.</p></div></div>
+      <form className="ds-upload-panel" onSubmit={upload}>
+        <div className="ds-upload-heading"><span className="ds-upload-icon"><Upload size={18} /></span><div><h2>Upload PPT / PDF / Study Material</h2><p>No sign-in required. Uploaded files are published for everyone to read. Maximum file size: 50 MB.</p></div></div>
         <div className="ds-upload-fields">
           <label><span>File title</span><input required minLength={2} maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Give this material a title" /></label>
           <label className="ds-upload-file"><span>Choose a file</span><input type="file" accept=".ppt,.pptx,.pdf,.doc,.docx,.txt,.ipynb" required onChange={selectFile} /><small>{file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB` : 'PPT, PPTX, PDF, DOC, DOCX, TXT, IPYNB'}</small></label>
-          <label className="ds-upload-publish"><input name="isPublished" type="checkbox" checked={publishOnUpload} onChange={(event) => setPublishOnUpload(event.target.checked)} /> <span>Publish for public reading</span></label>
           <button type="submit" className="academic-button" disabled={busy || !file}><Upload size={14} /> {busy ? 'Uploading...' : 'Upload Material'}</button>
         </div>
         {uploadError && <p className="academic-message is-error" role="alert">{uploadError}</p>}
         {message && <p className="academic-message" role="status">{message}</p>}
-      </form>}
+      </form>
 
       <section className="ds-study-materials">
         <div className="ds-study-heading"><div><span className="ds-eyebrow">STUDY LIBRARY</span><h2>Study materials</h2></div><span>{materials.length} {materials.length === 1 ? 'file' : 'files'}</span></div>
