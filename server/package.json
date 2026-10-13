@@ -18,6 +18,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
     "db:seed": "node prisma/seed.js",
+    "data-science:module1:import": "node prisma/import-data-science-module1.js",
     "education:generate": "node prisma/generate-education-assets.js",
     "education:seed": "node prisma/seed-educational-materials.js",
     "education:prepare": "npm run education:generate && npm run education:seed",
