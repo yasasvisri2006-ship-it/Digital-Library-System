@@ -50,6 +50,24 @@ describe('authentication screens', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid credentials.');
   });
 
+  it('displays the resume publicly without requiring sign-in', async () => {
+    useAuth.mockReturnValue({ user: null, loading: false, sessionError: '' });
+    render(
+      <MemoryRouter initialEntries={['/my-resume']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByTitle('Peta Yasasvisri resume')).toHaveAttribute(
+      'src',
+      '/resumes/Peta_Yasasvisri_Resume.pdf#view=FitH',
+    );
+    expect(screen.getByRole('link', { name: 'Download PDF' })).toHaveAttribute(
+      'href',
+      '/resumes/Peta_Yasasvisri_Resume.pdf',
+    );
+  });
+
   it('keeps admin-only content restricted without redirecting to a login page', () => {
     useAuth.mockReturnValue({ user: { role: 'student' }, loading: false, sessionError: '' });
     render(
@@ -148,15 +166,7 @@ describe('authentication screens', () => {
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('href', 'https://github.com/yasasvisri2006-ship-it');
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(screen.getByRole('link', { name: 'Resume (opens in a new tab)' })).toHaveAttribute(
-      'href',
-      '/resumes/Peta_Yasasvisri_Resume.pdf',
-    );
-    expect(screen.getByRole('link', { name: 'Resume (opens in a new tab)' })).toHaveAttribute('target', '_blank');
-    expect(screen.getByRole('link', { name: 'Resume (opens in a new tab)' })).toHaveAttribute(
-      'rel',
-      'noopener noreferrer',
-    );
+    expect(screen.getByRole('link', { name: 'Resume (opens resume section)' })).toHaveAttribute('href', '/my-resume');
     expect(screen.getByRole('heading', { name: 'Quick Access' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'EXPLORE DATA SCIENCE' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Study shortcuts and featured resources' })).not.toBeInTheDocument();

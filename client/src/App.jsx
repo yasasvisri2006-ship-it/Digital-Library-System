@@ -23,6 +23,7 @@ const ToolDetailPage = lazy(() => import('./pages/ToolDetailPage'));
 const CloudLearningPage = lazy(() => import('./pages/CloudLearningPage'));
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
 const ResumePage = lazy(() => import('./pages/ResumePage'));
+const PublicResumePage = lazy(() => import('./pages/PublicResumePage'));
 const CertificatesPage = lazy(() => import('./pages/CertificatesPage'));
 const CareerPreparationPage = lazy(() => import('./pages/CareerPreparationPage'));
 const PublicPortfolioPage = lazy(() => import('./pages/PublicPortfolioPage'));
@@ -71,7 +72,8 @@ export function AppRoutes() {
           <Route path="/tools/:toolKey" element={<ToolDetailPage />} />
           <Route path="/cloud-aws" element={<CloudLearningPage />} />
           <Route path="/projects" element={<ProtectedRoute allowedRoles={['student']}><ProjectsPage /></ProtectedRoute>} />
-          <Route path="/my-resume" element={<ProtectedRoute allowedRoles={['student']}><ResumePage /></ProtectedRoute>} />
+          <Route path="/my-resume" element={<PublicResumePage />} />
+          <Route path="/my-resume/edit" element={<ProtectedRoute allowedRoles={['student']}><ResumePage /></ProtectedRoute>} />
           <Route path="/certificates" element={<ProtectedRoute allowedRoles={['student']}><CertificatesPage /></ProtectedRoute>} />
           <Route path="/career-preparation" element={<ProtectedRoute allowedRoles={['student']}><CareerPreparationPage /></ProtectedRoute>} />
           <Route path="/digital-library" element={<DigitalLibraryPage />} />

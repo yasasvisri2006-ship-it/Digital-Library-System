@@ -159,7 +159,7 @@ function MotivationCard() {
 const connectItems = [
   { label: 'LinkedIn', url: socialLinks.linkedin, tone: 'linkedin' },
   { label: 'GitHub', url: socialLinks.github, tone: 'github' },
-  { label: 'Resume', url: '/resumes/Peta_Yasasvisri_Resume.pdf', icon: FileText, tone: 'resume' },
+  { label: 'Resume', to: '/my-resume', icon: FileText, tone: 'resume' },
 ];
 
 function ConnectWithMeCard() {
