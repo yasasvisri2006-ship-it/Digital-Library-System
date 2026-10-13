@@ -132,24 +132,9 @@ Private resource operations use `/api/subjects` and `/api/subjects/:subjectId/re
 The `@supabase/supabase-js` package is used for Supabase Storage. The existing `@aws-sdk/client-s3` dependency and `r2` provider remain available for deployments already configured with R2.
 
 ### Data Science Modules and document reader
-The **Modules** page has one Data Science workspace. Its existing numbered modules remain in place; opening the page no longer creates another set of modules. The public-read migrations mark the earliest-created owner's existing Module 01–05 rows as the public catalog and create any missing public module entries for an existing account, without moving or deleting any module or file. Public visitors can browse those modules and read published materials without signing in. Anyone can upload a PPT, PPTX, PDF, DOC, DOCX, TXT, or IPYNB file to a public module without an account; these uploads are immediately published and capped at 50 MB. Upload requests are rate-limited and files are validated on both client and server. Existing private uploads stay private until their owner explicitly publishes them. Only an authenticated module owner can rename modules or materials, unpublish, or delete files. Storage remains private, and public downloads are streamed only for published materials in public modules. Other personal and administrator features remain protected.
+The **Modules → Data Science** pages are static frontend content: listing modules and opening presentations does not call the API or require a database. The five module cards are defined in `client/src/data/dataScienceModules.js`. PPT/PPTX files are served directly from `client/public/data-science/moduleN`; Module 1 currently includes the presentations from the `mod1` folder. To add presentations to another module, place the files in that module's public folder and add their filenames to the corresponding module list in the static catalog. Rebuild and redeploy the frontend for changes to appear. Visitors can open or download the original presentation files.
 
-The PPT/PPTX files packaged in `server/content/data-science/module1` can be imported into public Module 1 after deployment. Deploy migrations with `npm.cmd --prefix server run db:migrate:deploy`, then run `npm.cmd --prefix server run data-science:module1:import`. The importer validates and stores presentations through the same private-storage upload service as browser uploads, publishes them for public reading, and skips filenames already present in Module 1. On Render, run these commands in the API service shell after deploying the updated repository; ensure its database and private file-storage environment variables are configured.
-
-PDF, TXT, and IPYNB files can be previewed directly. PPT/PPTX and DOC/DOCX uploads are converted to a reader PDF by LibreOffice on the server. The uploaded original remains available for download if conversion is unavailable or fails; the workspace reports the preview error rather than fabricating pages. PDF previews use PDF.js for the document pages and `react-pageflip` for page-turn animation, with page thumbnails, page navigation, zoom, fullscreen, and a single-page mobile layout.
-
-Apply the additive module/material and public-read migration, then regenerate Prisma:
-
-```powershell
-npm.cmd --prefix server run db:migrate:deploy
-npm.cmd --prefix server run db:generate
-```
-
-For local Office previews, install LibreOffice Impress and Writer and make `soffice` available on `PATH`, or set `LIBREOFFICE_PATH` in `server\.env` to its executable path. PDF, TXT, and IPYNB preview do not require LibreOffice.
-
-For Render, the backend must run as a **Docker Web Service** using `server\Dockerfile` (Root Directory `server`); set the health-check path to `/api/health`. The image installs LibreOffice and the required fonts. Deploy with the existing server environment variables, including `DATABASE_URL`, `JWT_SECRET`, `CLIENT_URL`, and the private Supabase/R2 settings described above; optionally set `LIBREOFFICE_PATH` only if the executable is not on `PATH`. Keep the Supabase bucket private. After deploying, run `npm run db:migrate:deploy` from the backend service shell before using the new workspace. The frontend remains a separate Render Static Site and should be rebuilt after its `VITE_API_URL` is configured. This repository does not deploy or migrate a Render service automatically.
-
-No new secret or Render environment variable is required. Run `db:migrate:deploy` before deploying the frontend. The migration leaves uploaded files private by default, marks one existing set of up to five numbered modules public, and does not delete duplicate/private module records or their materials.
+Other portal features continue to use their existing backend and database. The separate Data Science API and reader endpoints remain available for those workflows, but they are not needed to view the static module catalog and bundled presentations.
 
 ### Educational resource catalog
 
