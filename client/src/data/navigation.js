@@ -1,5 +1,4 @@
 import {
-  Award,
   BookMarked,
   BookOpen,
   Braces,
@@ -34,10 +33,8 @@ export const navigationItems = [
   { label: 'References', to: '/references', icon: BookMarked },
   { label: 'Coding Practice', to: '/coding-practice', icon: Braces },
   { label: 'Assignments', to: '/assignments', icon: FileText },
-  { label: 'Quizzes & Tests', to: '/quizzes-tests', icon: ClipboardList },
   { label: 'My Projects', to: '/projects', icon: FolderKanban },
   { label: 'My Resume', to: '/my-resume', icon: FileText },
-  { label: 'Certificates', to: '/certificates', icon: Award },
   { label: 'Career Preparation', to: '/career-preparation', icon: BriefcaseBusiness },
   { label: 'Digital Library', to: '/digital-library', icon: LibraryBig },
   { label: 'Library Admin', to: '/library/admin', icon: ShieldCheck, roles: ['admin'] },

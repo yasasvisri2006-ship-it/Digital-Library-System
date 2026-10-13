@@ -44,6 +44,14 @@ function WelcomeBanner() {
 }
 
 function RecentBooksPanel() {
+  const bookCovers = [
+    { image: '/images/dashboard-books/machine-learning.png', title: 'Introduction to Machine Learning' },
+    { image: '/images/dashboard-books/data-analytics.png', title: 'Fundamentals of Data Analytics' },
+    { image: '/images/dashboard-books/oracle-sql.png', title: 'Practical Guide to Oracle SQL, T-SQL and MySQL' },
+    { image: '/images/dashboard-books/python-programming.png', title: 'Basics of Python Programming for Pharmaceutical Sciences' },
+    { image: '/images/dashboard-books/data-science.png', title: 'Introduction to Data Science' },
+  ];
+
   return (
     <section className="ds-panel ds-recent-books" aria-labelledby="recent-books-heading">
       <div className="ds-section-heading">
@@ -51,10 +59,10 @@ function RecentBooksPanel() {
         <div><span className="ds-eyebrow">FROM YOUR COLLECTION</span><h2 id="recent-books-heading">Recent Books</h2></div>
         <Link to="/digital-library" className="ds-view-all">View All <ArrowRight size={14} /></Link>
       </div>
-      <div className="ds-books-empty">
-        <BookOpen size={20} strokeWidth={1.6} />
-        <span>No books are available to display yet.</span>
-        <small>Books will appear here when they are added to your library.</small>
+      <div className="ds-books-gallery" aria-label="Featured book covers">
+        {bookCovers.map(({ image, title }) => (
+          <img key={image} src={image} alt={title} loading="lazy" />
+        ))}
       </div>
     </section>
   );

@@ -1361,23 +1361,23 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
   align-items: stretch;
 }
 .ds-recent-books { min-height: 180px; }
-.ds-books-empty {
-  display: flex;
-  min-height: 108px;
+.ds-books-gallery {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
-  flex-direction: column;
-  justify-content: center;
-  gap: 7px;
-  padding: 16px;
-  border: 1px dashed #d8dee7;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #f0e7e9;
   border-radius: 10px;
-  color: #64748b;
   background: #fff;
-  text-align: center;
 }
-.ds-books-empty svg { color: #b5122b; }
-.ds-books-empty > span { color: #334155; font-size: 10px; font-weight: 600; }
-.ds-books-empty > small { color: #64748b; font-size: 8px; }
+.ds-books-gallery img {
+  display: block;
+  width: 100%;
+  height: 174px;
+  object-fit: contain;
+  object-position: center;
+}
 .ds-dashboard-identity > .ds-id-card .ds-id-header > img,
 .ds-dashboard-identity > .ds-id-card .ds-logo-fallback { width: 92px; height: 43px; }
 .ds-dashboard-identity > .ds-id-card .ds-id-body { padding-right: 16px; padding-left: 16px; }
@@ -1385,6 +1385,11 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
 .ds-dashboard-identity > .ds-id-card .ds-id-fields p { padding: 8px 0 7px; }
 .ds-dashboard-identity > .ds-id-card .ds-id-fields p strong { font-size: 9px; }
 @media (max-width: 700px) {
+  .ds-books-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .ds-books-gallery img { height: 190px; }
   .homepage-topbar { background: rgba(255,255,255,.98); }
   .homepage-topbar .mobile-menu-toggle { color: #b5122b; }
   .homepage-topbar .mobile-brand { color: #850d22; }
