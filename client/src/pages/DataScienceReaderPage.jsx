@@ -11,8 +11,9 @@ import {
 } from 'lucide-react';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchDataScienceFile, getDataScienceModules } from '../services/dataScience';
+import { fetchDataScienceFile, getDataScienceModules, getPublicDataScienceModules } from '../services/dataScience';
 import { openPdfDocument } from '../services/pdfReader';
+import { useAuth } from '../context/AuthContext';
 
 const BookPage = forwardRef(function BookPage({ pdf, pageNumber, width, height }, ref) {
   const canvasRef = useRef(null);
@@ -152,6 +153,7 @@ function saveDownload(blob, fileName) {
 
 export default function DataScienceReaderPage() {
   const { moduleId, materialId } = useParams();
+  const { user } = useAuth();
   const readerRef = useRef(null);
   const shellRef = useRef(null);
   const [module, setModule] = useState(null);
@@ -194,15 +196,22 @@ export default function DataScienceReaderPage() {
       setLoading(true);
       setError('');
       try {
-        const modules = await getDataScienceModules();
+        let modules = await getPublicDataScienceModules();
         const foundModule = modules.find((item) => item.id === moduleId);
-        const foundMaterial = foundModule?.materials.find((item) => item.id === materialId);
-        if (!foundModule || !foundMaterial) throw new Error('This study material was not found in your account.');
-        if (!foundMaterial.canRead && foundMaterial.previewError) throw new Error(foundMaterial.previewError);
-        const file = await fetchDataScienceFile(moduleId, materialId, true);
+        let foundMaterial = foundModule?.materials.find((item) => item.id === materialId);
+        if ((!foundModule || !foundMaterial) && user?.role === 'student') {
+          modules = await getDataScienceModules();
+        }
+        const resolvedModule = modules.find((item) => item.id === moduleId);
+        foundMaterial = resolvedModule?.materials.find((item) => item.id === materialId);
+        if (!resolvedModule || !foundMaterial) throw new Error('This published study material was not found.');
         if (!active) return;
-        setModule(foundModule);
+        setModule(resolvedModule);
         setMaterial(foundMaterial);
+        if (!foundMaterial.canRead && foundMaterial.previewError) throw new Error(foundMaterial.previewError);
+        const isPublic = resolvedModule.isPublic && foundMaterial.isPublished;
+        const file = await fetchDataScienceFile(moduleId, materialId, true, isPublic);
+        if (!active) return;
         if (file.type === 'application/pdf' || foundMaterial.fileType === 'PDF') {
           pdfDocument = await openPdfDocument(await file.arrayBuffer());
           if (active) setPdf(pdfDocument);
@@ -223,7 +232,7 @@ export default function DataScienceReaderPage() {
       active = false;
       pdfDocument?.destroy();
     };
-  }, [moduleId, materialId]);
+  }, [moduleId, materialId, user?.role]);
 
   const onFlip = useCallback((event) => setCurrentPage(Number(event.data)), []);
   const pageCount = pdf?.numPages || 0;
@@ -255,7 +264,7 @@ export default function DataScienceReaderPage() {
     setDownloadBusy(true);
     setError('');
     try {
-      const original = await fetchDataScienceFile(moduleId, materialId);
+      const original = await fetchDataScienceFile(moduleId, materialId, false, module.isPublic && material.isPublished);
       saveDownload(original, material.originalFileName);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'The original file could not be downloaded.');
@@ -286,7 +295,9 @@ export default function DataScienceReaderPage() {
       </header>
 
       {error && <p className="ds-reader-message is-error" role="alert">{error}</p>}
-      {loading ? <div className="ds-reader-loading" role="status">Preparing your document...</div> : (
+      {loading ? <div className="ds-reader-loading" role="status">Preparing your document...</div> : error ? (
+        <div className="ds-reader-loading" role="status">Preview unavailable. Use Download Original or return to the module.</div>
+      ) : (
         <div className="ds-reader-body">
           {pdf && <aside className="ds-reader-toc" aria-label="Page thumbnails">
             <h2>Pages <span>{pageCount}</span></h2>

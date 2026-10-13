@@ -5,19 +5,17 @@ import {
   Download,
   FileText,
   Pencil,
-  Plus,
   Trash2,
   Upload,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import DataScienceDocumentCover from '../components/DataScienceDocumentCover';
 import {
-  createDataScienceModule,
   deleteDataScienceMaterial,
   deleteDataScienceModule,
   fetchDataScienceFile,
-  getDataScienceModules,
+  getPublicDataScienceModules,
   updateDataScienceMaterial,
   updateDataScienceModule,
   uploadDataScienceMaterial,
@@ -49,12 +47,13 @@ function StudyMaterialCard({ module, material, onChanged }) {
   const [actionError, setActionError] = useState('');
   const [busy, setBusy] = useState(false);
   const readerPath = `/modules/data-science/${module.id}/read/${material.id}`;
+  const isPublic = module.isPublic && material.isPublished;
 
   async function downloadOriginal() {
     setActionError('');
     setBusy(true);
     try {
-      const file = await fetchDataScienceFile(module.id, material.id);
+      const file = await fetchDataScienceFile(module.id, material.id, false, isPublic);
       saveDownload(file, material.originalFileName);
     } catch (error) {
       setActionError(errorMessage(error));
@@ -69,8 +68,21 @@ function StudyMaterialCard({ module, material, onChanged }) {
     setActionError('');
     setBusy(true);
     try {
-      await updateDataScienceMaterial(material.id, title.trim());
+      await updateDataScienceMaterial(material.id, { title: title.trim() });
       onChanged('Material renamed.');
+    } catch (error) {
+      setActionError(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function togglePublication() {
+    setActionError('');
+    setBusy(true);
+    try {
+      await updateDataScienceMaterial(material.id, { isPublished: !material.isPublished });
+      onChanged(material.isPublished ? 'Material is now private.' : 'Material published for public reading.');
     } catch (error) {
       setActionError(errorMessage(error));
     } finally {
@@ -100,16 +112,18 @@ function StudyMaterialCard({ module, material, onChanged }) {
       <div className="ds-study-card-info">
         <div className="ds-study-card-heading">
           <div><span className="section-eyebrow">{material.fileType} · {formatDate(material.uploadedAt)}</span><h3>{material.title}</h3></div>
-          <div className="ds-study-card-tools">
+          {module.canManage && <div className="ds-study-card-tools">
             <button type="button" aria-label={`Rename ${material.title}`} title="Rename material" disabled={busy} onClick={renameMaterial}><Pencil size={14} /></button>
             <button type="button" aria-label={`Delete ${material.title}`} title="Delete material" disabled={busy} onClick={removeMaterial}><Trash2 size={14} /></button>
-          </div>
+          </div>}
         </div>
         <p className="ds-original-name">{material.originalFileName}</p>
+        <p className="ds-original-name">{isPublic ? 'Published for public reading' : 'Private to the module owner'}</p>
         {material.previewError && <p className="academic-message is-error" role="status">{material.previewError}</p>}
         <div className="ds-study-card-actions">
-          <Link className="academic-button" to={readerPath}><BookOpen size={14} /> {material.canRead ? 'Read Book' : 'Open Preview'}</Link>
+          <Link className="academic-button" to={readerPath}><BookOpen size={14} /> Read Book</Link>
           <button className="academic-button is-secondary" type="button" onClick={downloadOriginal} disabled={busy}><Download size={14} /> Download Original</button>
+          {module.canManage && <button className="academic-button is-secondary" type="button" onClick={togglePublication} disabled={busy}>{material.isPublished ? 'Unpublish' : 'Publish'}</button>}
         </div>
         {actionError && <p className="academic-message is-error" role="alert">{actionError}</p>}
       </div>
@@ -118,17 +132,15 @@ function StudyMaterialCard({ module, material, onChanged }) {
 }
 
 function ModuleListPage() {
-  const navigate = useNavigate();
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   const loadModules = useCallback(async (signal) => {
     setError('');
     try {
-      setModules(await getDataScienceModules(signal));
+      setModules(await getPublicDataScienceModules(signal));
     } catch (requestError) {
       if (requestError.name !== 'CanceledError') setError(errorMessage(requestError));
     } finally {
@@ -141,20 +153,6 @@ function ModuleListPage() {
     loadModules(controller.signal);
     return () => controller.abort();
   }, [loadModules]);
-
-  async function addModule() {
-    setBusy(true);
-    setError('');
-    setMessage('');
-    try {
-      const module = await createDataScienceModule();
-      navigate(`/modules/data-science/${module.id}`);
-    } catch (requestError) {
-      setError(errorMessage(requestError));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function renameModule(module) {
     const title = window.prompt(`Rename Module ${String(module.number).padStart(2, '0')}`, module.title);
@@ -185,8 +183,7 @@ function ModuleListPage() {
     <section className="ds-workspace-page">
       <Link to="/modules" className="back-link"><ArrowLeft size={15} /> Back to Modules</Link>
       <header className="ds-workspace-heading">
-        <div><span className="ds-eyebrow">YOUR PERSONAL STUDY SPACE</span><h1>Data Science</h1><p>Choose a numbered module to organize your own files and study materials.</p></div>
-        <button type="button" className="academic-button" onClick={addModule} disabled={busy}><Plus size={15} /> Add Module</button>
+        <div><span className="ds-eyebrow">PUBLIC STUDY LIBRARY</span><h1>Data Science</h1><p>Browse the published study materials in each Data Science module.</p></div>
       </header>
       {error && <p className="academic-message is-error" role="alert">{error}</p>}
       {message && <p className="academic-message" role="status">{message}</p>}
@@ -201,13 +198,16 @@ function ModuleListPage() {
                 <span>{module.materials.length} {module.materials.length === 1 ? 'material' : 'materials'}</span>
                 <strong>Open module <ArrowUpRight size={14} /></strong>
               </Link>
-              <div className="ds-module-workspace-actions">
+              {module.canManage && <div className="ds-module-workspace-actions">
                 <button type="button" onClick={() => renameModule(module)} aria-label={`Rename ${module.title}`}><Pencil size={14} /> Rename</button>
                 <button type="button" onClick={() => removeModule(module)} aria-label={`Delete ${module.title}`}><Trash2 size={14} /> Delete</button>
-              </div>
+              </div>}
             </article>
           ))}
         </div>
+      )}
+      {!loading && !error && modules.length === 0 && (
+        <div className="ds-materials-empty"><span><FileText size={23} /></span><h3>Modules are not available yet</h3><p>The public Data Science module catalog will appear here when it has been configured.</p></div>
       )}
     </section>
   );
@@ -223,11 +223,12 @@ function ModuleDetailPage() {
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
+  const [publishOnUpload, setPublishOnUpload] = useState(false);
 
   const loadModules = useCallback(async (signal) => {
     setLoadError('');
     try {
-      setModules(await getDataScienceModules(signal));
+      setModules(await getPublicDataScienceModules(signal));
     } catch (requestError) {
       if (requestError.name !== 'CanceledError') setLoadError(errorMessage(requestError));
     } finally {
@@ -273,13 +274,16 @@ function ModuleDetailPage() {
     setUploadError('');
     setMessage('');
     try {
-      const uploaded = await uploadDataScienceMaterial(module.id, title.trim(), file);
+      const uploaded = await uploadDataScienceMaterial(module.id, title.trim(), file, publishOnUpload);
       setFile(null);
       setTitle('');
+      setPublishOnUpload(false);
       form.reset();
       setMessage(uploaded.previewError
         ? `File uploaded. ${uploaded.previewError}`
-        : 'Study material uploaded successfully.');
+        : uploaded.isPublished
+          ? 'Study material uploaded and published for public reading.'
+          : 'Study material uploaded privately. Publish it when it is ready for public reading.');
       await loadModules();
     } catch (requestError) {
       setUploadError(errorMessage(requestError));
@@ -290,14 +294,14 @@ function ModuleDetailPage() {
 
   if (loading) return <section className="ds-workspace-page"><p className="academic-loading">Loading your module...</p></section>;
   if (loadError) return <section className="ds-workspace-page"><Link to="/modules/data-science" className="back-link"><ArrowLeft size={15} /> Back to Data Science</Link><p className="academic-message is-error" role="alert">{loadError}</p></section>;
-  if (!module) return <section className="ds-workspace-page"><Link to="/modules/data-science" className="back-link"><ArrowLeft size={15} /> Back to Data Science</Link><p className="academic-message is-error" role="alert">This module was not found in your account.</p></section>;
+  if (!module) return <section className="ds-workspace-page"><Link to="/modules/data-science" className="back-link"><ArrowLeft size={15} /> Back to Data Science</Link><p className="academic-message is-error" role="alert">This public module was not found.</p></section>;
 
   return (
     <section className="ds-workspace-page">
       <Link to="/modules/data-science" className="back-link"><ArrowLeft size={15} /> Back to Data Science modules</Link>
       <header className="ds-workspace-heading">
-        <div><span className="ds-eyebrow">MODULE {String(module.number).padStart(2, '0')}</span><h1>{module.title}</h1><p>Add and arrange your own course files and notes in this module.</p></div>
-        <button type="button" className="academic-button is-secondary" onClick={async () => {
+        <div><span className="ds-eyebrow">MODULE {String(module.number).padStart(2, '0')}</span><h1>{module.title}</h1><p>Read the materials published for this Data Science module.</p></div>
+        {module.canManage && <button type="button" className="academic-button is-secondary" onClick={async () => {
           const titleValue = window.prompt('Module title', module.title);
           if (titleValue === null || !titleValue.trim() || titleValue.trim() === module.title) return;
           try {
@@ -307,22 +311,23 @@ function ModuleDetailPage() {
           } catch (requestError) {
             setUploadError(errorMessage(requestError));
           }
-        }}><Pencil size={14} /> Rename Module</button>
+        }}><Pencil size={14} /> Rename Module</button>}
       </header>
 
-      <form className="ds-upload-panel" onSubmit={upload}>
-        <div className="ds-upload-heading"><span className="ds-upload-icon"><Upload size={18} /></span><div><h2>Upload PPT / PDF / Study Material</h2><p>Files stay private to your signed-in student account. Maximum file size: 50 MB.</p></div></div>
+      {module.canManage && <form className="ds-upload-panel" onSubmit={upload}>
+        <div className="ds-upload-heading"><span className="ds-upload-icon"><Upload size={18} /></span><div><h2>Upload PPT / PDF / Study Material</h2><p>Choose a file from this computer. Private uploads remain hidden until published. Maximum file size: 50 MB.</p></div></div>
         <div className="ds-upload-fields">
           <label><span>File title</span><input required minLength={2} maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Give this material a title" /></label>
           <label className="ds-upload-file"><span>Choose a file</span><input type="file" accept=".ppt,.pptx,.pdf,.doc,.docx,.txt,.ipynb" required onChange={selectFile} /><small>{file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB` : 'PPT, PPTX, PDF, DOC, DOCX, TXT, IPYNB'}</small></label>
+          <label className="ds-upload-publish"><input name="isPublished" type="checkbox" checked={publishOnUpload} onChange={(event) => setPublishOnUpload(event.target.checked)} /> <span>Publish for public reading</span></label>
           <button type="submit" className="academic-button" disabled={busy || !file}><Upload size={14} /> {busy ? 'Uploading...' : 'Upload Material'}</button>
         </div>
         {uploadError && <p className="academic-message is-error" role="alert">{uploadError}</p>}
         {message && <p className="academic-message" role="status">{message}</p>}
-      </form>
+      </form>}
 
       <section className="ds-study-materials">
-        <div className="ds-study-heading"><div><span className="ds-eyebrow">YOUR FILES</span><h2>Study materials</h2></div><span>{materials.length} {materials.length === 1 ? 'file' : 'files'}</span></div>
+        <div className="ds-study-heading"><div><span className="ds-eyebrow">STUDY LIBRARY</span><h2>Study materials</h2></div><span>{materials.length} {materials.length === 1 ? 'file' : 'files'}</span></div>
         {materials.length ? (
           <div className="ds-study-grid">{materials.map((material) => (
             <StudyMaterialCard
@@ -333,7 +338,7 @@ function ModuleDetailPage() {
             />
           ))}</div>
         ) : (
-          <div className="ds-materials-empty"><span><FileText size={23} /></span><h3>No study materials yet</h3><p>Upload your first PPT, PDF, or study file above. Nothing is added until you choose it.</p></div>
+          <div className="ds-materials-empty"><span><FileText size={23} /></span><h3>No published study materials yet</h3><p>{module.canManage ? 'Upload a PPT, PPTX, or PDF from this computer to get started.' : 'Published course materials will appear here.'}</p></div>
         )}
       </section>
     </section>

@@ -215,6 +215,7 @@ model DataScienceModule {
   ownerId   String               @db.Uuid
   number    Int
   title     String
+  isPublic  Boolean              @default(false)
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
   owner     User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -236,6 +237,7 @@ model DataScienceMaterial {
   filePath         String
   readerFilePath   String?
   readerError      String?
+  isPublished      Boolean         @default(false)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   owner            User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)

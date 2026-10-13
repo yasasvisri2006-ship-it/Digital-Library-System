@@ -29,6 +29,8 @@ const testUser = {
 let server;
 let baseUrl;
 const originalFindUnique = prisma.user.findUnique;
+const originalDataScienceModuleFindMany = prisma.dataScienceModule.findMany;
+const originalDataScienceMaterialFindFirst = prisma.dataScienceMaterial.findFirst;
 const originalFindMany = prisma.educationalMaterial.findMany;
 const originalMaterialFindUnique = prisma.educationalMaterial.findUnique;
 const originalOpen = privateFileStorage.open;
@@ -45,6 +47,19 @@ before(async () => {
         tokenVersion: testUser.tokenVersion,
       }
       : testUser
+  );
+  prisma.dataScienceModule.findMany = async () => [];
+  prisma.dataScienceMaterial.findFirst = async ({ where }) => (
+    where.isPublished && where.module?.isPublic
+      ? {
+        filePath: 'data-science/module/published.pdf',
+        readerFilePath: null,
+        originalFileName: 'published.pdf',
+        fileType: 'PDF',
+        mimeType: 'application/pdf',
+        readerError: null,
+      }
+      : null
   );
   prisma.educationalMaterial.findMany = async ({ where } = {}) => records
     .filter((record) => !where?.section || record.section === where.section)
@@ -89,6 +104,8 @@ before(async () => {
 
 after(async () => {
   prisma.user.findUnique = originalFindUnique;
+  prisma.dataScienceModule.findMany = originalDataScienceModuleFindMany;
+  prisma.dataScienceMaterial.findFirst = originalDataScienceMaterialFindFirst;
   prisma.educationalMaterial.findMany = originalFindMany;
   prisma.educationalMaterial.findUnique = originalMaterialFindUnique;
   privateFileStorage.open = originalOpen;
@@ -114,20 +131,30 @@ test('/api/auth/me is mounted and still verifies the authenticated session', asy
     headers: { cookie: `mbu_session=${token}` },
   });
 
-  test('Data Science module and material APIs reject unauthenticated access', async () => {
-    const read = await fetch(`${baseUrl}/api/data-science/modules`);
-    const write = await fetch(`${baseUrl}/api/data-science/modules`, {
-      method: 'POST',
-      headers: { origin: 'http://localhost:5173' },
-    });
-    assert.equal(read.status, 401);
-    assert.equal(write.status, 401);
-  });
   const body = await authenticated.json();
 
   assert.equal(authenticated.status, 200);
   assert.equal(body.data.user.id, testUser.id);
   assert.equal(body.data.user.role, 'student');
+});
+
+test('Data Science public reads work without sign-in while owner writes remain protected', async () => {
+  const publicRead = await fetch(`${baseUrl}/api/data-science/public/modules`);
+  const publicPreview = await fetch(
+    `${baseUrl}/api/data-science/public/modules/00000000-0000-4000-8000-000000000093/materials/00000000-0000-4000-8000-000000000094/preview`,
+  );
+  const privateRead = await fetch(`${baseUrl}/api/data-science/modules`);
+  const write = await fetch(`${baseUrl}/api/data-science/modules`, {
+    method: 'POST',
+    headers: { origin: 'http://localhost:5173' },
+  });
+  assert.equal(publicRead.status, 200);
+  assert.deepEqual((await publicRead.json()).data.modules, []);
+  assert.equal(publicPreview.status, 200);
+  assert.equal(publicPreview.headers.get('content-type'), 'application/pdf');
+  assert.equal(await publicPreview.text(), 'private-bucket-file-through-api');
+  assert.equal(privateRead.status, 401);
+  assert.equal(write.status, 401);
 });
 
 test('Python code execution requires an authenticated student, validates requests, and reports missing sandbox configuration', async () => {

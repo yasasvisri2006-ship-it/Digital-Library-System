@@ -35,53 +35,50 @@ function materialResponse(material) {
     mimeType: material.mimeType,
     fileSize: material.fileSize,
     uploadedAt: material.createdAt,
+    isPublished: material.isPublished,
     canRead: ['PDF', 'TXT', 'IPYNB'].includes(material.fileType) || Boolean(material.readerFilePath),
     previewError: material.readerError,
   };
 }
 
-function moduleResponse(module) {
+function moduleResponse(module, { canManage = false, publicOnly = false } = {}) {
+  const materials = module.materials || [];
   return {
     id: module.id,
     number: module.number,
     title: module.title,
+    isPublic: module.isPublic,
     createdAt: module.createdAt,
     updatedAt: module.updatedAt,
-    materials: (module.materials || []).map(materialResponse),
+    canManage,
+    materials: materials
+      .filter((material) => !publicOnly || canManage || material.isPublished)
+      .map(materialResponse),
   };
 }
 
 async function listModules(ownerId) {
-  let modules = await prisma.dataScienceModule.findMany({
+  const modules = await prisma.dataScienceModule.findMany({
     where: { ownerId },
     include: { materials: { orderBy: { createdAt: 'asc' } } },
     orderBy: { number: 'asc' },
   });
+  return modules.map((module) => moduleResponse(module, { canManage: true }));
+}
 
-  if (modules.length === 0) {
-    await prisma.$transaction(async (tx) => {
-      const initialized = await tx.user.updateMany({
-        where: { id: ownerId, dataScienceModulesInitialized: false },
-        data: { dataScienceModulesInitialized: true },
-      });
-      if (initialized.count > 0) {
-        await tx.dataScienceModule.createMany({
-          data: [1, 2, 3].map((number) => ({
-            ownerId,
-            number,
-            title: `Module ${String(number).padStart(2, '0')}`,
-          })),
-          skipDuplicates: true,
-        });
-      }
-    });
-    modules = await prisma.dataScienceModule.findMany({
-      where: { ownerId },
-      include: { materials: { orderBy: { createdAt: 'asc' } } },
-      orderBy: { number: 'asc' },
-    });
-  }
-  return modules.map(moduleResponse);
+async function listPublicModules(viewerId) {
+  const modules = await prisma.dataScienceModule.findMany({
+    where: { isPublic: true },
+    include: {
+      materials: { orderBy: { createdAt: 'asc' } },
+      owner: { select: { role: true } },
+    },
+    orderBy: { number: 'asc' },
+  });
+  return modules.map((module) => moduleResponse(module, {
+    canManage: Boolean(viewerId) && module.ownerId === viewerId && module.owner?.role === 'STUDENT',
+    publicOnly: true,
+  }));
 }
 
 async function createModule(ownerId) {
@@ -99,7 +96,7 @@ async function createModule(ownerId) {
     data: { ownerId, number, title: `Module ${String(number).padStart(2, '0')}` },
     include: { materials: true },
   });
-  return moduleResponse(module);
+  return moduleResponse(module, { canManage: true });
 }
 
 async function updateModule(ownerId, moduleId, title) {
@@ -112,7 +109,7 @@ async function updateModule(ownerId, moduleId, title) {
     where: { id: moduleId, ownerId },
     include: { materials: { orderBy: { createdAt: 'asc' } } },
   });
-  return moduleResponse(module);
+  return moduleResponse(module, { canManage: true });
 }
 
 async function assertOwnedModule(ownerId, moduleId) {
@@ -222,7 +219,7 @@ async function convertOfficeDocument(file, extension) {
   }
 }
 
-async function uploadMaterial(ownerId, moduleId, title, file) {
+async function uploadMaterial(ownerId, moduleId, title, file, isPublished = false) {
   const extension = await validateFile(file);
   await assertOwnedModule(ownerId, moduleId);
 
@@ -275,6 +272,7 @@ async function uploadMaterial(ownerId, moduleId, title, file) {
         filePath,
         readerFilePath: readerPdf ? readerFilePath : null,
         readerError,
+        isPublished: Boolean(isPublished),
       },
     });
     return materialResponse(material);
@@ -284,10 +282,10 @@ async function uploadMaterial(ownerId, moduleId, title, file) {
   }
 }
 
-async function updateMaterial(ownerId, materialId, title) {
+async function updateMaterial(ownerId, materialId, changes) {
   const result = await prisma.dataScienceMaterial.updateMany({
     where: { id: materialId, ownerId },
-    data: { title },
+    data: changes,
   });
   if (result.count === 0) throw new ApiError(404, 'Study material not found.');
   const material = await prisma.dataScienceMaterial.findFirst({ where: { id: materialId, ownerId } });
@@ -312,6 +310,38 @@ async function getMaterialFile(ownerId, moduleId, materialId, preview = false) {
     ? material.readerFilePath || (['PDF', 'TXT', 'IPYNB'].includes(material.fileType) ? material.filePath : null)
     : material.filePath;
   if (!filePath) throw new ApiError(415, 'This file type cannot be previewed in the reader. Download the original file to open it.');
+  const stream = await privateFileStorage.open(env.academicResourceStorageDir, filePath);
+  return {
+    stream,
+    fileName: material.originalFileName,
+    mimeType: preview && filePath !== material.filePath ? 'application/pdf' : material.mimeType,
+    inlineFileName: preview && filePath !== material.filePath ? `${path.parse(material.originalFileName).name}.pdf` : material.originalFileName,
+  };
+}
+
+async function getPublicMaterialFile(moduleId, materialId, preview = false) {
+  const material = await prisma.dataScienceMaterial.findFirst({
+    where: {
+      id: materialId,
+      moduleId,
+      isPublished: true,
+      module: { isPublic: true },
+    },
+    select: {
+      filePath: true,
+      readerFilePath: true,
+      originalFileName: true,
+      fileType: true,
+      mimeType: true,
+      readerError: true,
+    },
+  });
+  if (!material) throw new ApiError(404, 'Published study material not found.');
+  if (preview && material.readerError) throw new ApiError(415, material.readerError);
+  const filePath = preview
+    ? material.readerFilePath || (['PDF', 'TXT', 'IPYNB'].includes(material.fileType) ? material.filePath : null)
+    : material.filePath;
+  if (!filePath) throw new ApiError(415, 'This published file type cannot be previewed in the reader.');
   const stream = await privateFileStorage.open(env.academicResourceStorageDir, filePath);
   return {
     stream,
@@ -357,7 +387,9 @@ module.exports = {
   deleteMaterial,
   deleteModule,
   getMaterialFile,
+  getPublicMaterialFile,
   listModules,
+  listPublicModules,
   MAX_UPLOAD_SIZE,
   updateMaterial,
   updateModule,

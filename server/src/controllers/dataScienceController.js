@@ -6,6 +6,11 @@ async function listModules(req, res) {
   sendSuccess(res, { message: 'Data Science modules loaded.', data: { modules } });
 }
 
+async function listPublicModules(req, res) {
+  const modules = await dataScienceService.listPublicModules(req.auth?.id);
+  sendSuccess(res, { message: 'Public Data Science modules loaded.', data: { modules } });
+}
+
 async function createModule(req, res) {
   const module = await dataScienceService.createModule(req.auth.id);
   sendSuccess(res, { statusCode: 201, message: 'Data Science module created.', data: { module } });
@@ -27,6 +32,7 @@ async function uploadMaterial(req, res) {
     req.params.moduleId,
     req.body.title,
     req.file,
+    req.body.isPublished === 'true',
   );
   sendSuccess(res, {
     statusCode: 201,
@@ -38,7 +44,8 @@ async function uploadMaterial(req, res) {
 }
 
 async function updateMaterial(req, res) {
-  const material = await dataScienceService.updateMaterial(req.auth.id, req.params.materialId, req.body.title);
+  const changes = Object.fromEntries(Object.entries(req.body).filter(([, value]) => value !== undefined));
+  const material = await dataScienceService.updateMaterial(req.auth.id, req.params.materialId, changes);
   sendSuccess(res, { message: 'Study material renamed.', data: { material } });
 }
 
@@ -67,6 +74,25 @@ async function streamMaterial(req, res, next, preview) {
   }
 }
 
+async function streamPublicMaterial(req, res, next, preview) {
+  try {
+    const file = await dataScienceService.getPublicMaterialFile(
+      req.params.moduleId,
+      req.params.materialId,
+      preview,
+    );
+    res.set({
+      'Cache-Control': 'public, max-age=300',
+      'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(file.inlineFileName)}`,
+      'Content-Type': file.mimeType,
+      'X-Content-Type-Options': 'nosniff',
+    });
+    file.stream.on('error', next).pipe(res);
+  } catch (error) {
+    next(error);
+  }
+}
+
 function downloadMaterial(req, res, next) {
   return streamMaterial(req, res, next, false);
 }
@@ -75,13 +101,24 @@ function previewMaterial(req, res, next) {
   return streamMaterial(req, res, next, true);
 }
 
+function downloadPublicMaterial(req, res, next) {
+  return streamPublicMaterial(req, res, next, false);
+}
+
+function previewPublicMaterial(req, res, next) {
+  return streamPublicMaterial(req, res, next, true);
+}
+
 module.exports = {
   createModule,
   deleteMaterial,
   deleteModule,
   downloadMaterial,
+  downloadPublicMaterial,
+  listPublicModules,
   listModules,
   previewMaterial,
+  previewPublicMaterial,
   updateMaterial,
   updateModule,
   uploadMaterial,

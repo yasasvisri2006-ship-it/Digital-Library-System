@@ -2,6 +2,7 @@ const express = require('express');
 const controller = require('../controllers/dataScienceController');
 const { authenticate } = require('../middleware/authenticate');
 const { dataScienceFileUpload } = require('../middleware/dataScienceFileUpload');
+const { optionalAuthenticate } = require('../middleware/optionalAuthenticate');
 const { requireRole } = require('../middleware/requireRole');
 const { requireTrustedOrigin } = require('../middleware/requireTrustedOrigin');
 const { validateRequest } = require('../middleware/validateRequest');
@@ -9,6 +10,21 @@ const { validateUuidParam } = require('../middleware/validateUuidParam');
 const { materialUpdateSchema, materialUploadSchema, moduleUpdateSchema } = require('../validators/dataScienceValidators');
 
 const router = express.Router();
+
+router.get('/public/modules', optionalAuthenticate, controller.listPublicModules);
+router.get(
+  '/public/modules/:moduleId/materials/:materialId/file',
+  validateUuidParam('moduleId'),
+  validateUuidParam('materialId'),
+  controller.downloadPublicMaterial,
+);
+router.get(
+  '/public/modules/:moduleId/materials/:materialId/preview',
+  validateUuidParam('moduleId'),
+  validateUuidParam('materialId'),
+  controller.previewPublicMaterial,
+);
+
 router.use(authenticate, requireRole('STUDENT'));
 
 router.get('/modules', controller.listModules);

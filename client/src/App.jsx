@@ -57,15 +57,15 @@ export function AppRoutes() {
         <Route path="/admin/setup" element={<AdminSetupPage />} />
         <Route path="/register" element={<Navigate to="/dashboard" replace />} />
         <Route path="/portfolio/:slug" element={<PublicPortfolioPage />} />
-        <Route path="/modules/data-science/:moduleId/read/:materialId" element={<ProtectedRoute allowedRoles={['student']}><DataScienceReaderPage /></ProtectedRoute>} />
+        <Route path="/modules/data-science/:moduleId/read/:materialId" element={<DataScienceReaderPage />} />
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/users/create" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/modules" element={<ModulesPage />} />
-          <Route path="/modules/data-science" element={<ProtectedRoute allowedRoles={['student']}><DataScienceWorkspacePage /></ProtectedRoute>} />
-          <Route path="/modules/data-science/:moduleId" element={<ProtectedRoute allowedRoles={['student']}><DataScienceWorkspacePage /></ProtectedRoute>} />
+          <Route path="/modules/data-science" element={<DataScienceWorkspacePage />} />
+          <Route path="/modules/data-science/:moduleId" element={<DataScienceWorkspacePage />} />
           <Route path="/coding-practice" element={<CodingPracticePage />} />
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/tools/:toolKey" element={<ToolDetailPage />} />

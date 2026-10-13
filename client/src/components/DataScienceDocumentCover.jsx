@@ -33,7 +33,7 @@ export default function DataScienceDocumentCover({ moduleId, material }) {
     let renderTask;
     async function renderCover() {
       try {
-        const file = await fetchDataScienceFile(moduleId, material.id, true);
+        const file = await fetchDataScienceFile(moduleId, material.id, true, material.isPublished);
         documentTask = await openPdfDocument(await file.arrayBuffer());
         const page = await documentTask.getPage(1);
         if (!active || !canvasRef.current) return;

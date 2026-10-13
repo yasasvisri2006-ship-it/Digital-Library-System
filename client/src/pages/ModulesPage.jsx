@@ -9,7 +9,7 @@ export default function ModulesPage() {
       <div className="ds-modules-intro">
         <span className="ds-eyebrow">YOUR DATA SCIENCE JOURNEY</span>
         <h1>Learning Modules</h1>
-        <p>Keep your own Data Science study materials together in one workspace.</p>
+        <p>Browse published Data Science study materials and module readings.</p>
       </div>
       <div className="ds-module-grid">
         {moduleItems.map(({ title, subtitle, icon: Icon, tone, to }) => (
@@ -23,7 +23,7 @@ export default function ModulesPage() {
           </motion.div>
         ))}
       </div>
-      <div className="ds-module-note"><BookOpen size={17} /><span>Create numbered modules and upload your own study materials.</span></div>
+      <div className="ds-module-note"><BookOpen size={17} /><span>Open the public module library to read published materials.</span></div>
     </section>
   );
 }
