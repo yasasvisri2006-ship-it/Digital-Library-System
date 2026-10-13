@@ -149,7 +149,15 @@ describe('authentication screens', () => {
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('href', 'https://github.com/yasasvisri2006-ship-it');
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: 'GitHub (opens in a new tab)' })).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(screen.getByRole('link', { name: 'Resume (opens resume section)' })).toHaveAttribute('href', '/my-resume');
+    expect(screen.getByRole('link', { name: 'Resume (opens in a new tab)' })).toHaveAttribute(
+      'href',
+      '/resumes/Peta_Yasasvisri_Resume.pdf',
+    );
+    expect(screen.getByRole('link', { name: 'Resume (opens in a new tab)' })).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: 'Resume (opens in a new tab)' })).toHaveAttribute(
+      'rel',
+      'noopener noreferrer',
+    );
     expect(screen.getByRole('heading', { name: 'Quick Access' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'EXPLORE DATA SCIENCE' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Study shortcuts and featured resources' })).not.toBeInTheDocument();
