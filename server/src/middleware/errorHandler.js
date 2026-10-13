@@ -27,14 +27,19 @@ function errorHandler(error, req, res, next) {
     const statusCode = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
     const isAcademicResource = req.baseUrl?.includes('/subjects');
     const isPortfolio = req.baseUrl?.includes('/portfolio');
+    const isDataScience = req.baseUrl?.includes('/data-science');
     const message = error.code === 'LIMIT_FILE_SIZE'
       ? isAcademicResource
         ? 'Academic PDF files must be 20 MB or smaller.'
+        : isDataScience
+          ? 'Study materials must be 50 MB or smaller.'
         : isPortfolio
             ? 'Project screenshots must be 8 MB or smaller; portfolio PDFs must be 20 MB or smaller.'
         : 'Profile photos must be 5 MB or smaller.'
       : isAcademicResource
         ? 'The academic PDF upload could not be processed.'
+        : isDataScience
+          ? 'The study material upload could not be processed.'
         : isPortfolio
           ? 'The portfolio file upload could not be processed.'
         : 'The profile photo upload could not be processed.';

@@ -9,6 +9,7 @@ const publicPortfolioRoutes = require('./publicPortfolioRoutes');
 const libraryRoutes = require('./libraryRoutes');
 const adminRoutes = require('./adminRoutes');
 const educationalMaterialRoutes = require('./educationalMaterialRoutes');
+const dataScienceRoutes = require('./dataScienceRoutes');
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use('/public/portfolio', publicPortfolioRoutes);
 router.use('/library', libraryRoutes);
 router.use('/admin', adminRoutes);
 router.use('/education', educationalMaterialRoutes);
+router.use('/data-science', dataScienceRoutes);
 
 module.exports = router;

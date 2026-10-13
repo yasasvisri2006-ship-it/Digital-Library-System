@@ -3,7 +3,6 @@ import {
   BookMarked,
   BookOpen,
   Braces,
-  ChartNoAxesColumn,
   ClipboardList,
   Cloud,
   BriefcaseBusiness,
@@ -52,14 +51,7 @@ export const navigationItems = [
 export const navigationGroups = [{ label: 'STUDENT PORTAL', items: navigationItems }];
 
 export const moduleItems = [
-  { title: 'Python', subtitle: 'Programming', icon: Code2, tone: 'python', to: '/coding-practice' },
-  { title: 'SQL', subtitle: 'Databases', icon: Database, tone: 'sql', to: '/coding-practice' },
-  { title: 'Data Analysis', subtitle: 'Explore data', icon: ChartNoAxesColumn, tone: 'analysis', to: '/my-learning' },
-  { title: 'Machine Learning', subtitle: 'Intelligent systems', icon: Award, tone: 'machine', to: '/my-learning' },
-  { title: 'Data Visualization', subtitle: 'Tell the story', icon: ChartNoAxesColumn, tone: 'visualization', to: '/tools' },
-  { title: 'Power BI', subtitle: 'Business insights', icon: ClipboardList, tone: 'powerbi', to: '/tools' },
-  { title: 'AWS Cloud', subtitle: 'Cloud computing', icon: Database, tone: 'cloud', to: '/study-materials' },
-  { title: 'Project Work', subtitle: 'Build & create', icon: FolderKanban, tone: 'project', to: '/projects' },
+  { title: 'Data Science', subtitle: 'Your personal study workspace', icon: Layers3, tone: 'science', to: '/modules/data-science' },
 ];
 
 export const quickAccessItems = [

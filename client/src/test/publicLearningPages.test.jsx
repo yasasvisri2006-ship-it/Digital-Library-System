@@ -106,9 +106,14 @@ describe('public read-only learning pages', () => {
     expect(screen.queryByRole('button', { name: /add subject/i })).not.toBeInTheDocument();
   });
 
-  it('shows module, My Learning, and Lab Experiments catalog pages publicly', async () => {
+  it('shows only the Data Science workspace card on Modules while preserving My Learning and Lab Experiments', async () => {
     await renderRoute('/modules', <ModulesPage />);
-    expect(await screen.findByRole('heading', { name: 'Subject modules and chapter notes' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Learning Modules' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Data Science/ })).toHaveLength(1);
+    for (const subject of ['Python', 'SQL', 'Data Analysis', 'Machine Learning', 'Data Visualization', 'Power BI', 'AWS Cloud', 'Project Work']) {
+      expect(screen.queryByText(subject, { exact: true })).not.toBeInTheDocument();
+    }
+    expect(getEducationalMaterials).not.toHaveBeenCalled();
     cleanup();
 
     await renderRoute('/my-learning', <EducationalSectionPage />);

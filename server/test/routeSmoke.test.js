@@ -113,6 +113,16 @@ test('/api/auth/me is mounted and still verifies the authenticated session', asy
   const authenticated = await fetch(`${baseUrl}/api/auth/me`, {
     headers: { cookie: `mbu_session=${token}` },
   });
+
+  test('Data Science module and material APIs reject unauthenticated access', async () => {
+    const read = await fetch(`${baseUrl}/api/data-science/modules`);
+    const write = await fetch(`${baseUrl}/api/data-science/modules`, {
+      method: 'POST',
+      headers: { origin: 'http://localhost:5173' },
+    });
+    assert.equal(read.status, 401);
+    assert.equal(write.status, 401);
+  });
   const body = await authenticated.json();
 
   assert.equal(authenticated.status, 200);

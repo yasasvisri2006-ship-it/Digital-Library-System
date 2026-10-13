@@ -20,6 +20,7 @@ const envSchema = z.object({
   DEMO_STUDENT_PASSWORD: z.string().min(12).optional(),
   ACADEMIC_RESOURCE_STORAGE_PROVIDER: z.enum(['local', 'r2', 'supabase']).default('local'),
   ACADEMIC_RESOURCE_STORAGE_DIR: optionalNonEmptyString,
+  LIBREOFFICE_PATH: optionalNonEmptyString,
   R2_ACCOUNT_ID: z.preprocess(
     (value) => value === '' ? undefined : value,
     z.string().regex(/^[a-f0-9]{32}$/i, 'R2_ACCOUNT_ID must be a 32-character Cloudflare account ID').optional(),
@@ -94,6 +95,7 @@ const env = Object.freeze({
   demoStudentPassword: parsedEnv.data.DEMO_STUDENT_PASSWORD,
   databaseUrl: parsedEnv.data.DATABASE_URL,
   academicResourceStorageProvider: parsedEnv.data.ACADEMIC_RESOURCE_STORAGE_PROVIDER,
+  libreOfficePath: parsedEnv.data.LIBREOFFICE_PATH,
   academicResourceStorageDir: path.resolve(
     parsedEnv.data.ACADEMIC_RESOURCE_STORAGE_DIR
       || path.resolve(__dirname, '../../storage/academic-resources'),

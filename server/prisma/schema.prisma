@@ -101,11 +101,14 @@ model User {
   role               UserRole              @default(STUDENT)
   isActive           Boolean               @default(true)
   tokenVersion       Int                   @default(0)
+  dataScienceModulesInitialized Boolean    @default(false)
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
   studentProfile     StudentProfile?
   subjects           Subject[]             @relation("SubjectOwner")
   academicResources  AcademicResource[]
+  dataScienceModules DataScienceModule[]
+  dataScienceMaterials DataScienceMaterial[]
   codingProblems     CodingProblem[]
   codingEvents       CodingPracticeEvent[]
   learningProgress   LearningProgress[]
@@ -205,6 +208,41 @@ model EducationalMaterial {
 
   @@index([section, sortOrder])
   @@index([subjectName, moduleNumber])
+}
+
+model DataScienceModule {
+  id        String               @id @default(uuid()) @db.Uuid
+  ownerId   String               @db.Uuid
+  number    Int
+  title     String
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  owner     User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  materials DataScienceMaterial[]
+
+  @@unique([ownerId, number])
+  @@index([ownerId, number])
+}
+
+model DataScienceMaterial {
+  id               String           @id @default(uuid()) @db.Uuid
+  ownerId          String           @db.Uuid
+  moduleId         String           @db.Uuid
+  title            String
+  originalFileName String
+  fileType         String
+  mimeType         String
+  fileSize         Int
+  filePath         String
+  readerFilePath   String?
+  readerError      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  owner            User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  module           DataScienceModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, moduleId, createdAt])
+  @@index([moduleId, createdAt])
 }
 
 model CodingProblem {

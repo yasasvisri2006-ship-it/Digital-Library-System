@@ -14,6 +14,8 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SubjectsPage = lazy(() => import('./pages/SubjectsPage'));
 const SubjectDetailPage = lazy(() => import('./pages/SubjectDetailPage'));
 const ModulesPage = lazy(() => import('./pages/ModulesPage'));
+const DataScienceWorkspacePage = lazy(() => import('./pages/DataScienceWorkspacePage'));
+const DataScienceReaderPage = lazy(() => import('./pages/DataScienceReaderPage'));
 const QuickAccessPage = lazy(() => import('./pages/QuickAccessPage'));
 const CodingPracticePage = lazy(() => import('./pages/CodingPracticePage'));
 const ToolsPage = lazy(() => import('./pages/ToolsPage'));
@@ -55,12 +57,15 @@ export function AppRoutes() {
         <Route path="/admin/setup" element={<AdminSetupPage />} />
         <Route path="/register" element={<Navigate to="/dashboard" replace />} />
         <Route path="/portfolio/:slug" element={<PublicPortfolioPage />} />
+        <Route path="/modules/data-science/:moduleId/read/:materialId" element={<ProtectedRoute allowedRoles={['student']}><DataScienceReaderPage /></ProtectedRoute>} />
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/users/create" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/modules" element={<ModulesPage />} />
+          <Route path="/modules/data-science" element={<ProtectedRoute allowedRoles={['student']}><DataScienceWorkspacePage /></ProtectedRoute>} />
+          <Route path="/modules/data-science/:moduleId" element={<ProtectedRoute allowedRoles={['student']}><DataScienceWorkspacePage /></ProtectedRoute>} />
           <Route path="/coding-practice" element={<CodingPracticePage />} />
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/tools/:toolKey" element={<ToolDetailPage />} />

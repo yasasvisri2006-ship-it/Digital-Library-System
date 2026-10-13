@@ -94,6 +94,22 @@ test('Supabase accepts private resume object keys', async () => {
   calls.length = 0;
 });
 
+test('Supabase accepts private Data Science originals and converted reader PDFs', async () => {
+  const moduleId = '00000000-0000-4000-8000-000000000011';
+  const materialId = '00000000-0000-4000-8000-000000000012';
+  const originalKey = `data-science/${moduleId}/${materialId}.pptx`;
+  const readerKey = `data-science/${moduleId}/${materialId}.reader.pdf`;
+
+  await privateFileStorage.store('', originalKey, file, 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+  await privateFileStorage.store('', readerKey, file, 'application/pdf');
+  assert.deepEqual(await readStream(await privateFileStorage.open('', originalKey)), file);
+  assert.deepEqual(await readStream(await privateFileStorage.open('', readerKey)), file);
+  await privateFileStorage.remove('', originalKey);
+  await privateFileStorage.remove('', readerKey);
+  assert.equal(calls.length, 6);
+  calls.length = 0;
+});
+
 test('Supabase adapter rejects invalid object keys before storage access', async () => {
   await assert.rejects(
     privateFileStorage.open('', '../outside.pdf'),

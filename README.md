@@ -131,9 +131,26 @@ Private resource operations use `/api/subjects` and `/api/subjects/:subjectId/re
 
 The `@supabase/supabase-js` package is used for Supabase Storage. The existing `@aws-sdk/client-s3` dependency and `r2` provider remain available for deployments already configured with R2.
 
+### Data Science Modules and document reader
+
+The **Modules** page has one Data Science workspace. The first visit creates three empty, numbered modules for the signed-in student; additional modules can be added, renamed, or deleted. Each student's modules and file metadata are kept in PostgreSQL and scoped to that student's authenticated account. PPT/PPTX, PDF, DOC/DOCX, TXT, and IPYNB uploads are capped at 50 MB; uploaded originals are private in the existing academic-resource storage provider. Download and preview requests use authenticated, owner-checked API routes and do not expose storage URLs or service credentials.
+
+PDF, TXT, and IPYNB files can be previewed directly. PPT/PPTX and DOC/DOCX uploads are converted to a reader PDF by LibreOffice on the server. The uploaded original remains available for download if conversion is unavailable or fails; the workspace reports the preview error rather than fabricating pages. PDF previews use PDF.js for the document pages and `react-pageflip` for page-turn animation, with page thumbnails, page navigation, zoom, fullscreen, and a single-page mobile layout.
+
+Apply the additive module/material migration and regenerate Prisma before using the workspace:
+
+```powershell
+npm.cmd --prefix server run db:migrate:deploy
+npm.cmd --prefix server run db:generate
+```
+
+For local Office previews, install LibreOffice Impress and Writer and make `soffice` available on `PATH`, or set `LIBREOFFICE_PATH` in `server\.env` to its executable path. PDF, TXT, and IPYNB preview do not require LibreOffice.
+
+For Render, the backend must run as a **Docker Web Service** using `server\Dockerfile` (Root Directory `server`); set the health-check path to `/api/health`. The image installs LibreOffice and the required fonts. Deploy with the existing server environment variables, including `DATABASE_URL`, `JWT_SECRET`, `CLIENT_URL`, and the private Supabase/R2 settings described above; optionally set `LIBREOFFICE_PATH` only if the executable is not on `PATH`. Keep the Supabase bucket private. After deploying, run `npm run db:migrate:deploy` from the backend service shell before using the new workspace. The frontend remains a separate Render Static Site and should be rebuilt after its `VITE_API_URL` is configured. This repository does not deploy or migrate a Render service automatically.
+
 ### Educational resource catalog
 
-The existing Dashboard, My Subjects, Modules, My Learning, Lab Experiments, Data Science Tools, Cloud & AWS, Study Materials, References, Coding Practice, and Assignments pages use an additive PostgreSQL catalog (`EducationalMaterial`). Its migration creates a new table and indexes only; it does not alter or delete existing student, subject, assignment, or resource rows. Suggested semester order is supplemental, not an official MBU syllabus. Practice assignments are labeled as practice rather than university-issued work.
+The existing Dashboard, My Subjects, My Learning, Lab Experiments, Data Science Tools, Cloud & AWS, Study Materials, References, Coding Practice, and Assignments pages use an additive PostgreSQL catalog (`EducationalMaterial`). Its migration creates a new table and indexes only; it does not alter or delete existing student, subject, assignment, or resource rows. The educational catalog and its existing module records remain intact; the Modules page now uses the separate private Data Science workspace described above. Suggested semester order is supplemental, not an official MBU syllabus. Practice assignments are labeled as practice rather than university-issued work.
 
 The catalog source is maintained in `server/src/data/educationCatalog.js`. It contains 18 subjects and 54 units, practicals, tool guides, AWS topics, study plans, references, datasets, assignments, quizzes, and worked coding questions. The asset generator creates 18 original PDF study guides and four PPTX presentations. `pdfkit` and `pptxgenjs` are server dependencies for generating those files; the generated assets are in `server/content/resources`.
 
