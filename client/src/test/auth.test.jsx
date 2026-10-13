@@ -155,7 +155,7 @@ describe('authentication screens', () => {
     expect(screen.queryByRole('heading', { name: 'Study shortcuts and featured resources' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Recently added learning materials' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Explore by subject' })).not.toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).toHaveTextContent('Digital Library');
+    expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).not.toHaveTextContent('Digital Library');
     expect(screen.queryByRole('link', { name: /login|sign in|register/i })).not.toBeInTheDocument();
   });
 
@@ -176,7 +176,7 @@ describe('authentication screens', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).toHaveTextContent('Digital Library');
+    expect(screen.getByRole('navigation', { name: 'Student portal navigation', hidden: true })).not.toHaveTextContent('Digital Library');
     expect(screen.queryByRole('link', { name: 'Library Admin' })).not.toBeInTheDocument();
     expect(screen.getByText('Dashboard content')).toBeInTheDocument();
   });

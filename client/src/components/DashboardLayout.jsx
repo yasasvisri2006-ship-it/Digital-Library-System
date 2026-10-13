@@ -24,7 +24,7 @@ function BrandMark() {
       </div>
       <span className="branding-divider" />
       <div className="library-lockup">
-        <BookOpen size={27} strokeWidth={1.7} />
+        <BookOpen size={36} strokeWidth={1.7} />
         <span><strong>DIGITAL LIBRARY</strong><small>DATA SCIENCE</small></span>
       </div>
     </div>

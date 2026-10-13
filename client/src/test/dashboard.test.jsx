@@ -35,5 +35,15 @@ describe('dashboard presentation', () => {
   it('removes Certifications and Quizzes & Tests from the portal navigation', () => {
     expect(navigationItems.some(({ label }) => label === 'Certificates')).toBe(false);
     expect(navigationItems.some(({ label }) => label === 'Quizzes & Tests')).toBe(false);
+    expect(navigationItems.map(({ label }) => label)).not.toEqual(
+      expect.arrayContaining([
+        'My Resume',
+        'Digital Library',
+        'Settings',
+        'Datasets',
+        'My Profile',
+        'Career Preparation',
+      ]),
+    );
   });
 });

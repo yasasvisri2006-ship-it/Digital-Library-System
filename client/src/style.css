@@ -2789,7 +2789,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
 .portal-topbar .library-lockup strong {
   color: #70152f;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(25px, 2.1vw, 31px);
+  font-size: clamp(30px, 3.2vw, 40px);
   font-weight: 700;
   letter-spacing: .015em;
   line-height: 1.05;
@@ -2797,11 +2797,19 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
 .portal-topbar .library-lockup small {
   color: #70152f;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(20px, 1.8vw, 26px);
+  font-size: clamp(25px, 2.9vw, 36px);
   font-style: normal;
   font-weight: 700;
   letter-spacing: .04em;
   line-height: 1.1;
+}
+.portal-topbar .library-lockup > span { gap: 0; }
+.portal-topbar .branding-divider { height: 72px; }
+@media (min-width: 821px) and (max-width: 1050px) {
+  .portal-topbar .library-lockup > svg { width: 30px; }
+  .portal-topbar .library-lockup strong { font-size: 29px; }
+  .portal-topbar .library-lockup small { font-size: 23px; }
+  .portal-topbar .branding-divider { height: 60px; }
 }
 @media (min-width: 1001px) {
   .portal-topbar .portal-search { width: clamp(220px, 20vw, 240px); }

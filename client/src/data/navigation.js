@@ -34,15 +34,9 @@ export const navigationItems = [
   { label: 'Coding Practice', to: '/coding-practice', icon: Braces },
   { label: 'Assignments', to: '/assignments', icon: FileText },
   { label: 'My Projects', to: '/projects', icon: FolderKanban },
-  { label: 'My Resume', to: '/my-resume', icon: FileText },
-  { label: 'Career Preparation', to: '/career-preparation', icon: BriefcaseBusiness },
-  { label: 'Digital Library', to: '/digital-library', icon: LibraryBig },
   { label: 'Library Admin', to: '/library/admin', icon: ShieldCheck, roles: ['admin'] },
   { label: 'Admin Dashboard', to: '/admin/dashboard', icon: LayoutDashboard, roles: ['admin'] },
   { label: 'Users Management', to: '/admin/users/create', icon: Users, roles: ['admin'] },
-  { label: 'Datasets', to: '/datasets', icon: Database },
-  { label: 'My Profile', to: '/my-profile', icon: UserRound },
-  { label: 'Settings', to: '/settings', icon: Settings },
 ];
 
 export const navigationGroups = [{ label: 'STUDENT PORTAL', items: navigationItems }];
