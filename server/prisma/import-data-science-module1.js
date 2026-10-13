@@ -5,7 +5,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const { prisma } = require('../src/config/prisma');
 const dataScienceService = require('../src/services/dataScienceService');
 
-const sourceDirectory = path.resolve(__dirname, '../../mod1');
+const sourceDirectory = path.resolve(__dirname, '../content/data-science/module1');
 const presentationExtensions = new Set(['.ppt', '.pptx']);
 
 async function main() {
