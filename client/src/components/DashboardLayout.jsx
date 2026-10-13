@@ -18,14 +18,14 @@ import { getInitials, getProfilePhotoUrl } from '../services/profilePhoto';
 function BrandMark() {
   return (
     <div className="header-branding">
-      <div className="university-lockup" aria-label="Data Science Library branding">
+      <div className="university-lockup" aria-label="Data Science Digital Library branding">
         <img className="university-logo-image" src="/images/data-science-library-seal.svg" alt="Data Science Library emblem" />
         <span className="university-copy"><strong>MOHAN BABU</strong><small>UNIVERSITY</small></span>
       </div>
       <span className="branding-divider" />
       <div className="library-lockup">
         <BookOpen size={36} strokeWidth={1.7} />
-        <span><strong>DIGITAL LIBRARY</strong><small>DATA SCIENCE</small></span>
+        <span><strong>DATA SCIENCE DIGITAL LIBRARY</strong></span>
       </div>
     </div>
   );
@@ -161,10 +161,9 @@ function Topbar({ menuOpen, onMenuToggle }) {
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
         <BrandMark />
-        <Link to="/dashboard" className="mobile-brand" aria-label="MBU Digital Library home">
-          <img src="/images/data-science-library-seal.svg" alt="" />
+        <Link to="/dashboard" className="mobile-brand" aria-label="Data Science Digital Library home">
           <BookOpen size={18} strokeWidth={1.8} />
-          <span><b>DIGITAL LIBRARY</b><small>DATA SCIENCE</small></span>
+          <span><b>DATA SCIENCE DIGITAL LIBRARY</b></span>
         </Link>
       </div>
 

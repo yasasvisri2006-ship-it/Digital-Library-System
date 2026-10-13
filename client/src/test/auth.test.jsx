@@ -132,8 +132,7 @@ describe('authentication screens', () => {
     const identityCard = screen.getByText('Registration Number:').closest('.ds-id-card');
     expect(screen.queryByText('STUDENT IDENTITY CARD')).not.toBeInTheDocument();
     expect(identityCard).not.toHaveTextContent('Department:');
-    expect(screen.getAllByText('DIGITAL LIBRARY')).toHaveLength(2);
-    expect(screen.getAllByText('DATA SCIENCE')).toHaveLength(2);
+    expect(screen.getAllByText('DATA SCIENCE DIGITAL LIBRARY')).toHaveLength(2);
     expect(screen.queryByRole('navigation', { name: 'Homepage navigation' })).not.toBeInTheDocument();
     expect(identityCard).toHaveTextContent('Registration Number:25302A030001');
     expect(identityCard).not.toHaveTextContent('Student ID:');
