@@ -45,13 +45,30 @@ describe('static Data Science modules', () => {
 
   it('shows an empty static module without calling the API', () => {
     render(
+      <MemoryRouter initialEntries={['/modules/data-science/3']}>
+        <Routes><Route path="/modules/data-science/:moduleId" element={<DataScienceWorkspacePage />} /></Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Module 03' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'No presentations added yet' })).toBeInTheDocument();
+    expect(getPublicDataScienceModules).not.toHaveBeenCalled();
+  });
+
+  it('lists the Module 2 presentations and PDF as static links', () => {
+    render(
       <MemoryRouter initialEntries={['/modules/data-science/2']}>
         <Routes><Route path="/modules/data-science/:moduleId" element={<DataScienceWorkspacePage />} /></Routes>
       </MemoryRouter>,
     );
 
     expect(screen.getByRole('heading', { name: 'Module 02' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'No presentations added yet' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Open PPT/ })).toHaveLength(6);
+    expect(screen.getAllByRole('link', { name: 'Download' })).toHaveLength(6);
+    expect(screen.getByRole('link', { name: 'Open Dimensionality. PCA, LDA', exact: true })).toHaveAttribute(
+      'href',
+      '/data-science/module2/Dimensionality.%20PCA%2C%20LDA.pdf',
+    );
     expect(getPublicDataScienceModules).not.toHaveBeenCalled();
   });
 });

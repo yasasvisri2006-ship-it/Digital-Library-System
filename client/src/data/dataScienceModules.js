@@ -17,9 +17,18 @@ const moduleOneFiles = [
   'Tools For Data Science.pptx',
 ];
 
+const moduleTwoFiles = [
+  'Decision Tree Classification Algorithm.pptx',
+  'Decision Tree.pptx',
+  'Dimensionality. PCA, LDA.pdf',
+  'Feature Selection.pptx',
+  'Storey_DecisionTrees.ppt',
+  'User Retention.pptx',
+];
+
 export const dataScienceModules = Array.from({ length: 5 }, (_, index) => {
   const number = index + 1;
-  const files = number === 1 ? moduleOneFiles : [];
+  const files = number === 1 ? moduleOneFiles : number === 2 ? moduleTwoFiles : [];
 
   return {
     id: String(number),
