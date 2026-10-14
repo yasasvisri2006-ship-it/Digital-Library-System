@@ -16,6 +16,9 @@ const execFileAsync = promisify(execFile);
 const MAX_UPLOAD_SIZE = 50 * 1024 * 1024;
 const maximumConvertedSize = 100 * 1024 * 1024;
 const officeExtensions = new Set(['ppt', 'pptx', 'doc', 'docx']);
+const defaultLibreOfficePath = process.platform === 'win32'
+  ? path.join(process.env.ProgramFiles || 'C:\\Program Files', 'LibreOffice', 'program', 'soffice.com')
+  : 'soffice';
 const mimeTypes = {
   pdf: 'application/pdf',
   ppt: 'application/vnd.ms-powerpoint',
@@ -184,7 +187,7 @@ async function convertOfficeDocument(file, extension) {
     await writeFile(path.join(workingDirectory, inputName), file.buffer, { mode: 0o600 });
     try {
       await execFileAsync(
-        env.libreOfficePath || 'soffice',
+        env.libreOfficePath || defaultLibreOfficePath,
         [
           '--headless',
           `-env:UserInstallation=${pathToFileURL(path.join(workingDirectory, 'profile')).href}`,
