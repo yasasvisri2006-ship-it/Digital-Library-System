@@ -2338,7 +2338,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
 .ds-book-stage::after { position: absolute; top: 5%; bottom: 5%; left: 50%; width: 18px; transform: translateX(-50%); background: linear-gradient(90deg,rgba(22,8,14,.01),rgba(39,16,24,.2) 48%,rgba(22,8,14,.01)); content: ""; pointer-events: none; }
 .ds-book-zoom { display: flex; flex: none; align-items: center; justify-content: center; transform-origin: center; transition: transform .18s ease; }
 .ds-page-flip-book { box-shadow: 0 18px 48px rgba(10,2,6,.3); }
-.ds-book-page { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; overflow: hidden; padding: 14px; border-right: 1px solid #ece7e8; color: #45343a; background: #fff; box-shadow: inset 1px 0 7px rgba(54,30,37,.05); }
+.ds-book-page { position: relative; display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; overflow: hidden; padding: 14px; border-right: 1px solid #ece7e8; color: #45343a; background: #fff; box-shadow: inset 1px 0 7px rgba(54,30,37,.05); }
 .ds-book-page canvas { display: block; max-width: 100%; max-height: calc(100% - 19px); object-fit: contain; }
 .ds-book-page-number { position: absolute; bottom: 8px; color: #8f8588; font-size: 8px; }
 .ds-book-page-error { color: #9b1734; font-size: 9px; }
@@ -2346,6 +2346,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #b51
 .ds-page-navigation, .ds-zoom-controls { display: inline-flex; align-items: center; gap: 9px; color: #ead9df; font-size: 9px; }
 .ds-page-navigation button, .ds-zoom-controls button { display: inline-flex; min-height: 31px; align-items: center; justify-content: center; gap: 3px; padding: 0 8px; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; color: #fff; background: rgba(255,255,255,.06); font: inherit; cursor: pointer; }
 .ds-page-navigation button:disabled, .ds-zoom-controls button:disabled { opacity: .4; cursor: default; }
+.ds-book-stage .stf__parent { touch-action: pan-y; }
 .ds-zoom-controls { gap: 6px; }
 .ds-zoom-controls span { min-width: 35px; text-align: center; }
 .ds-text-document { width: min(850px,calc(100% - 28px)); max-height: calc(100% - 35px); overflow: auto; padding: clamp(20px,5vw,54px); border-radius: 4px; color: #46363d; background: #fff; box-shadow: 0 18px 48px rgba(10,2,6,.3); }

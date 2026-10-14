@@ -160,6 +160,7 @@ export default function DataScienceReaderPage() {
   const [module, setModule] = useState(null);
   const [material, setMaterial] = useState(null);
   const [pdf, setPdf] = useState(null);
+  const [pageAspect, setPageAspect] = useState(1 / 1.38);
   const [text, setText] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [pageWidth, setPageWidth] = useState(440);
@@ -168,18 +169,25 @@ export default function DataScienceReaderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadBusy, setDownloadBusy] = useState(false);
+  const isLandscape = pageAspect > 1.05;
 
   useEffect(() => {
     function updateSize() {
       const mobile = window.innerWidth < 880;
-      setPageWidth(mobile
-        ? Math.max(280, Math.min(500, window.innerWidth - 44))
-        : Math.max(300, Math.min(450, (window.innerWidth - 390) / 2)));
+      if (isLandscape) {
+        const availableWidth = mobile ? window.innerWidth - 24 : window.innerWidth - 190;
+        const availableHeight = window.innerHeight - 160;
+        setPageWidth(Math.max(280, Math.min(900, availableWidth, availableHeight * pageAspect)));
+      } else {
+        setPageWidth(mobile
+          ? Math.max(280, Math.min(500, window.innerWidth - 44))
+          : Math.max(300, Math.min(450, (window.innerWidth - 390) / 2)));
+      }
     }
     updateSize();
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
-  }, []);
+  }, [isLandscape, pageAspect]);
 
   useEffect(() => {
     if (!document) return undefined;
@@ -193,6 +201,16 @@ export default function DataScienceReaderPage() {
   useEffect(() => {
     let active = true;
     let pdfDocument;
+    async function preparePdf(file) {
+      pdfDocument = await openPdfDocument(await file.arrayBuffer());
+      const firstPage = await pdfDocument.getPage(1);
+      const viewport = firstPage.getViewport({ scale: 1 });
+      if (!active) return;
+      setPageAspect(viewport.width / viewport.height);
+      setCurrentPage(0);
+      setPdf(pdfDocument);
+    }
+
     async function load() {
       setLoading(true);
       setError('');
@@ -204,8 +222,7 @@ export default function DataScienceReaderPage() {
           setMaterial(staticMaterial);
           const file = await fetchPublicStaticDataSciencePreview(moduleId, staticMaterial.originalFileName);
           if (!active) return;
-          pdfDocument = await openPdfDocument(await file.arrayBuffer());
-          if (active) setPdf(pdfDocument);
+          await preparePdf(file);
           return;
         }
 
@@ -226,8 +243,7 @@ export default function DataScienceReaderPage() {
         const file = await fetchDataScienceFile(moduleId, materialId, true, isPublic);
         if (!active) return;
         if (file.type === 'application/pdf' || foundMaterial.fileType === 'PDF') {
-          pdfDocument = await openPdfDocument(await file.arrayBuffer());
-          if (active) setPdf(pdfDocument);
+          await preparePdf(file);
         } else if (['TXT', 'IPYNB'].includes(foundMaterial.fileType)) {
           const contents = await file.text();
           setText(foundMaterial.fileType === 'IPYNB' ? JSON.stringify(JSON.parse(contents), null, 2) : contents);
@@ -250,7 +266,9 @@ export default function DataScienceReaderPage() {
   const onFlip = useCallback((event) => setCurrentPage(Number(event.data)), []);
   const pageCount = pdf?.numPages || 0;
   const isMobile = window.innerWidth < 880;
-  const pageHeight = Math.round(pageWidth * 1.38);
+  const pageHeight = isLandscape
+    ? Math.round(pageWidth / pageAspect)
+    : Math.round(pageWidth * 1.38);
 
   function turnPage(direction) {
     const flipBook = readerRef.current?.pageFlip();
@@ -346,10 +364,10 @@ export default function DataScienceReaderPage() {
                     minHeight={pageHeight}
                     maxHeight={pageHeight}
                     showCover={false}
-                    usePortrait={isMobile}
+                    usePortrait={isMobile || isLandscape}
                     drawShadow
-                    maxShadowOpacity={0.28}
-                    flippingTime={780}
+                    maxShadowOpacity={0.4}
+                    flippingTime={900}
                     mobileScrollSupport
                     onFlip={onFlip}
                     className="ds-page-flip-book"
