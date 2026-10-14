@@ -2,7 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import DashboardPage from '../pages/DashboardPage';
-import { navigationItems } from '../data/navigation';
+import { navigationItems, quickAccessItems } from '../data/navigation';
 
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({ user: null }),
@@ -44,6 +44,15 @@ describe('dashboard presentation', () => {
         'My Profile',
         'Career Preparation',
       ]),
+    );
+  });
+
+  it('hides Assignments and My Projects from navigation and Quick Access', () => {
+    expect(navigationItems.map(({ to }) => to)).not.toEqual(
+      expect.arrayContaining(['/assignments', '/projects']),
+    );
+    expect(quickAccessItems.map(({ to }) => to)).not.toEqual(
+      expect.arrayContaining(['/assignments', '/projects']),
     );
   });
 });

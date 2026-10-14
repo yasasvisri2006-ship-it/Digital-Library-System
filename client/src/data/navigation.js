@@ -32,8 +32,6 @@ export const navigationItems = [
   { label: 'Study Materials', to: '/study-materials', icon: LibraryBig },
   { label: 'References', to: '/references', icon: BookMarked },
   { label: 'Coding Practice', to: '/coding-practice', icon: Braces },
-  { label: 'Assignments', to: '/assignments', icon: FileText },
-  { label: 'My Projects', to: '/projects', icon: FolderKanban },
   { label: 'Library Admin', to: '/library/admin', icon: ShieldCheck, roles: ['admin'] },
   { label: 'Admin Dashboard', to: '/admin/dashboard', icon: LayoutDashboard, roles: ['admin'] },
   { label: 'Users Management', to: '/admin/users/create', icon: Users, roles: ['admin'] },
@@ -50,9 +48,7 @@ export const quickAccessItems = [
   { title: 'Tools', to: '/tools', icon: Wrench, tone: 'violet' },
   { title: 'References', to: '/references', icon: BookOpen, tone: 'green' },
   { title: 'Images', to: '/images', icon: Image, tone: 'peach' },
-  { title: 'Assignments', to: '/assignments', icon: FileText, tone: 'blue' },
   { title: 'Coding Practice', to: '/coding-practice', icon: Braces, tone: 'lavender' },
-  { title: 'Projects', to: '/projects', icon: FolderKanban, tone: 'pink' },
 ];
 
 export const moduleDetails = {
