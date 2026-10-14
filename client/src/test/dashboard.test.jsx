@@ -55,4 +55,15 @@ describe('dashboard presentation', () => {
       expect.arrayContaining(['/assignments', '/projects']),
     );
   });
+
+  it('hides My Subjects, My Learning, Cloud & AWS, and Study Materials from navigation', () => {
+    expect(navigationItems.map(({ to }) => to)).not.toEqual(
+      expect.arrayContaining([
+        '/my-subjects',
+        '/my-learning',
+        '/cloud-aws',
+        '/study-materials',
+      ]),
+    );
+  });
 });

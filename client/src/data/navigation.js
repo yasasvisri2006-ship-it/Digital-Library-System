@@ -3,7 +3,6 @@ import {
   BookOpen,
   Braces,
   ClipboardList,
-  Cloud,
   BriefcaseBusiness,
   Code2,
   Database,
@@ -23,13 +22,9 @@ import {
 
 export const navigationItems = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, roles: ['student'] },
-  { label: 'My Subjects', to: '/my-subjects', icon: Layers3 },
   { label: 'Modules', to: '/modules', icon: Layers3 },
-  { label: 'My Learning', to: '/my-learning', icon: BookOpen },
   { label: 'Lab Experiments', to: '/lab-experiments', icon: FlaskConical },
   { label: 'Data Science Tools', to: '/tools', icon: Wrench },
-  { label: 'Cloud & AWS', to: '/cloud-aws', icon: Cloud },
-  { label: 'Study Materials', to: '/study-materials', icon: LibraryBig },
   { label: 'References', to: '/references', icon: BookMarked },
   { label: 'Coding Practice', to: '/coding-practice', icon: Braces },
   { label: 'Library Admin', to: '/library/admin', icon: ShieldCheck, roles: ['admin'] },
