@@ -11,12 +11,14 @@ import {
 import { openPdfDocument } from '../services/pdfReader';
 
 vi.mock('react-pageflip', () => ({
-  default: ({ width, height, usePortrait }) => (
+  default: ({ children, width, height, usePortrait }) => (
     <div
       data-testid="page-flip-book"
       data-landscape={String(width > height)}
       data-single-slide={String(usePortrait)}
-    />
+    >
+      {children}
+    </div>
   ),
 }));
 
@@ -46,9 +48,11 @@ describe('static presentation flipbook', () => {
       numPages: 12,
       getPage: vi.fn().mockResolvedValue({
         getViewport: () => ({ width: 960, height: 540 }),
+        render: () => ({ promise: Promise.resolve(), cancel: vi.fn() }),
       }),
       destroy: vi.fn(),
     };
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({});
     const fetch = vi.fn().mockResolvedValue({
       ok: true,
       blob: async () => new Blob(['static preview']),
@@ -68,6 +72,9 @@ describe('static presentation flipbook', () => {
     expect(await screen.findByTestId('page-flip-book')).toHaveAttribute('data-landscape', 'true');
     expect(screen.getByTestId('page-flip-book')).toHaveAttribute('data-single-slide', 'true');
     expect(screen.getByText('Page 1–2 of 12')).toBeInTheDocument();
+    await waitFor(() => expect(pdf.getPage).toHaveBeenCalledWith(1));
+    expect(pdf.getPage).toHaveBeenCalledWith(2);
+    expect(pdf.getPage).toHaveBeenCalledWith(3);
     await waitFor(() => expect(fetch).toHaveBeenCalledWith(
       '/data-science/previews/module1/Data%20Analysis%20and%20Analytics.pdf',
     ));

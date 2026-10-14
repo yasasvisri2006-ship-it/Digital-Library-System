@@ -16,33 +16,16 @@ import { openPdfDocument } from '../services/pdfReader';
 import { useAuth } from '../context/AuthContext';
 import { dataScienceModules } from '../data/dataScienceModules';
 
-const BookPage = forwardRef(function BookPage({ pdf, pageNumber, width, height }, ref) {
+const BookPage = forwardRef(function BookPage({ pdf, pageNumber, width, height, shouldRender }, ref) {
   const canvasRef = useRef(null);
   const [error, setError] = useState(false);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const pageElement = ref?.current;
-    if (!pageElement) return undefined;
-    if (!('IntersectionObserver' in window)) {
-      setVisible(true);
-      return undefined;
-    }
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setVisible(true);
-        observer.disconnect();
-      }
-    }, { rootMargin: '700px' });
-    observer.observe(pageElement);
-    return () => observer.disconnect();
-  }, [ref]);
-
-  useEffect(() => {
-    if (!visible) return undefined;
+    if (!shouldRender) return undefined;
     let active = true;
     let renderTask;
     async function paint() {
+      setError(false);
       try {
         const page = await pdf.getPage(pageNumber);
         if (!active || !canvasRef.current) return;
@@ -73,7 +56,7 @@ const BookPage = forwardRef(function BookPage({ pdf, pageNumber, width, height }
       active = false;
       renderTask?.cancel();
     };
-  }, [pdf, pageNumber, width, height, visible]);
+  }, [pdf, pageNumber, width, height, shouldRender]);
 
   return (
     <div ref={ref} className="ds-book-page">
@@ -375,7 +358,14 @@ export default function DataScienceReaderPage() {
                     className="ds-page-flip-book"
                   >
                     {Array.from({ length: pageCount }, (_, index) => (
-                      <BookPage key={index + 1} pdf={pdf} pageNumber={index + 1} width={pageWidth} height={pageHeight} />
+                      <BookPage
+                        key={index + 1}
+                        pdf={pdf}
+                        pageNumber={index + 1}
+                        width={pageWidth}
+                        height={pageHeight}
+                        shouldRender={index + 1 >= Math.max(1, currentPage) && index + 1 <= currentPage + 3}
+                      />
                     ))}
                   </HTMLFlipBook>
                 </div>
