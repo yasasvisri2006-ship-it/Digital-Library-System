@@ -38,7 +38,11 @@ describe('static Data Science modules', () => {
     expect(screen.getAllByRole('link', { name: 'Download' })).toHaveLength(16);
     expect(screen.getByRole('link', { name: 'Open Introduction to Data Science', exact: true })).toHaveAttribute(
       'href',
-      '/data-science/module1/Introduction%20to%20Data%20Science.pptx',
+      '/modules/data-science/1/read/module-1-material-10',
+    );
+    expect(screen.getAllByRole('link', { name: 'Download' })[0]).toHaveAttribute(
+      'href',
+      '/data-science/module1/Data%20Analysis%20and%20Analytics.pptx',
     );
     expect(getPublicDataScienceModules).not.toHaveBeenCalled();
   });
@@ -55,7 +59,7 @@ describe('static Data Science modules', () => {
     expect(getPublicDataScienceModules).not.toHaveBeenCalled();
   });
 
-  it('lists the Module 2 presentations and PDF as static links', () => {
+  it('links Module 2 presentations to the reader and keeps original downloads separate', () => {
     render(
       <MemoryRouter initialEntries={['/modules/data-science/2']}>
         <Routes><Route path="/modules/data-science/:moduleId" element={<DataScienceWorkspacePage />} /></Routes>
@@ -66,6 +70,10 @@ describe('static Data Science modules', () => {
     expect(screen.getAllByRole('link', { name: /Open PPT/ })).toHaveLength(6);
     expect(screen.getAllByRole('link', { name: 'Download' })).toHaveLength(6);
     expect(screen.getByRole('link', { name: 'Open Dimensionality. PCA, LDA', exact: true })).toHaveAttribute(
+      'href',
+      '/modules/data-science/2/read/module-2-material-3',
+    );
+    expect(screen.getAllByRole('link', { name: 'Download' })[2]).toHaveAttribute(
       'href',
       '/data-science/module2/Dimensionality.%20PCA%2C%20LDA.pdf',
     );

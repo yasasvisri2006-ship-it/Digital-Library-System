@@ -11,9 +11,10 @@ import {
 } from 'lucide-react';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchDataScienceFile, getDataScienceModules, getPublicDataScienceModules } from '../services/dataScience';
+import { fetchDataScienceFile, fetchPublicStaticDataSciencePreview, getDataScienceModules, getPublicDataScienceModules } from '../services/dataScience';
 import { openPdfDocument } from '../services/pdfReader';
 import { useAuth } from '../context/AuthContext';
+import { dataScienceModules } from '../data/dataScienceModules';
 
 const BookPage = forwardRef(function BookPage({ pdf, pageNumber, width, height }, ref) {
   const canvasRef = useRef(null);
@@ -196,6 +197,18 @@ export default function DataScienceReaderPage() {
       setLoading(true);
       setError('');
       try {
+        const staticModule = dataScienceModules.find((item) => item.id === moduleId);
+        const staticMaterial = staticModule?.materials.find((item) => item.id === materialId);
+        if (staticModule && staticMaterial) {
+          setModule(staticModule);
+          setMaterial(staticMaterial);
+          const file = await fetchPublicStaticDataSciencePreview(moduleId, staticMaterial.originalFileName);
+          if (!active) return;
+          pdfDocument = await openPdfDocument(await file.arrayBuffer());
+          if (active) setPdf(pdfDocument);
+          return;
+        }
+
         let modules = await getPublicDataScienceModules();
         const foundModule = modules.find((item) => item.id === moduleId);
         let foundMaterial = foundModule?.materials.find((item) => item.id === materialId);
@@ -264,6 +277,12 @@ export default function DataScienceReaderPage() {
     setDownloadBusy(true);
     setError('');
     try {
+      if (material.url) {
+        const response = await fetch(material.url);
+        if (!response.ok) throw new Error('The original file could not be downloaded.');
+        saveDownload(await response.blob(), material.originalFileName);
+        return;
+      }
       const original = await fetchDataScienceFile(moduleId, materialId, false, module.isPublic && material.isPublished);
       saveDownload(original, material.originalFileName);
     } catch (requestError) {

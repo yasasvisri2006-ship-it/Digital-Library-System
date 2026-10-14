@@ -27,4 +27,17 @@ const publicDataScienceUploadRateLimiter = rateLimit({
   },
 });
 
-module.exports = { apiRateLimiter, publicDataScienceUploadRateLimiter };
+const publicDataSciencePreviewRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  handler(req, res) {
+    sendError(res, {
+      statusCode: 429,
+      message: 'Too many presentation previews. Please try again later.',
+    });
+  },
+});
+
+module.exports = { apiRateLimiter, publicDataSciencePreviewRateLimiter, publicDataScienceUploadRateLimiter };

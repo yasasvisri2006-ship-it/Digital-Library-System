@@ -164,6 +164,24 @@ test('keeps an actual PPTX download available and reports missing conversion cle
   );
 });
 
+test('converts the bundled public PDF for an in-app preview and rejects unsafe paths', async () => {
+  const source = await readFile(path.resolve(__dirname, '../../client/public/data-science/module2/Dimensionality. PCA, LDA.pdf'));
+  const preview = await dataScienceService.createPublicStaticMaterialPreview('2', 'Dimensionality. PCA, LDA.pdf', source);
+  assert.equal(preview.mimeType, 'application/pdf');
+  const chunks = [];
+  for await (const chunk of preview.stream) chunks.push(chunk);
+  assert.deepEqual(Buffer.concat(chunks), source);
+
+  await assert.rejects(
+    dataScienceService.createPublicStaticMaterialPreview('2', '../module1/Data Analysis and Analytics.pptx', source),
+    { statusCode: 404 },
+  );
+  await assert.rejects(
+    dataScienceService.createPublicStaticMaterialPreview('6', 'missing.pptx', source),
+    { statusCode: 404 },
+  );
+});
+
 test('allows public uploads to public modules and always publishes them', async () => {
   prisma.dataScienceModule.findFirst = async ({ where }) => {
     if (where.id === moduleId && where.isPublic) return { id: moduleId, ownerId };

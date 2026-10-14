@@ -1,5 +1,7 @@
 const { after, before, test } = require('node:test');
 const assert = require('node:assert/strict');
+const { readFile } = require('node:fs/promises');
+const path = require('node:path');
 const jwt = require('jsonwebtoken');
 const { Readable } = require('node:stream');
 
@@ -151,6 +153,7 @@ test('Data Science public reads work without sign-in while owner writes remain p
     method: 'POST',
     headers: { origin: 'http://localhost:5173' },
   });
+
   assert.equal(publicRead.status, 200);
   assert.deepEqual((await publicRead.json()).data.modules, []);
   assert.equal(publicPreview.status, 200);
@@ -158,6 +161,23 @@ test('Data Science public reads work without sign-in while owner writes remain p
   assert.equal(await publicPreview.text(), 'private-bucket-file-through-api');
   assert.equal(privateRead.status, 401);
   assert.equal(write.status, 401);
+});
+
+test('bundled public presentation previews are served as PDFs', async () => {
+  const source = await readFile(path.resolve(__dirname, '../../client/public/data-science/module2/Dimensionality. PCA, LDA.pdf'));
+  const preview = await fetch(`${baseUrl}/api/data-science/public/static/modules/2/materials/Dimensionality.%20PCA%2C%20LDA.pdf/preview`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/octet-stream',
+      origin: 'http://localhost:5173',
+    },
+    body: source,
+  });
+
+  assert.equal(preview.status, 200);
+  assert.equal(preview.headers.get('content-type'), 'application/pdf');
+  assert.match(preview.headers.get('content-disposition'), /inline/);
+  assert.match(await preview.text(), /^%PDF-/);
 });
 
 test('public Data Science uploads accept anonymous uploads from the trusted browser origin', async () => {

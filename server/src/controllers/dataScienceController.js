@@ -108,6 +108,25 @@ async function streamPublicMaterial(req, res, next, preview) {
   }
 }
 
+async function previewPublicStaticMaterial(req, res, next) {
+  try {
+    const file = await dataScienceService.createPublicStaticMaterialPreview(
+      req.params.moduleId,
+      req.params.fileName,
+      req.body,
+    );
+    res.set({
+      'Cache-Control': 'no-store',
+      'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(file.fileName)}`,
+      'Content-Type': file.mimeType,
+      'X-Content-Type-Options': 'nosniff',
+    });
+    file.stream.on('error', next).pipe(res);
+  } catch (error) {
+    next(error);
+  }
+}
+
 function downloadMaterial(req, res, next) {
   return streamMaterial(req, res, next, false);
 }
@@ -134,6 +153,7 @@ module.exports = {
   listModules,
   previewMaterial,
   previewPublicMaterial,
+  previewPublicStaticMaterial,
   uploadPublicMaterial,
   updateMaterial,
   updateModule,

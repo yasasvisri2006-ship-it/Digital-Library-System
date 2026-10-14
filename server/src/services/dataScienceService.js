@@ -6,6 +6,7 @@ const path = require('node:path');
 const { promisify } = require('node:util');
 const { pathToFileURL } = require('node:url');
 const JSZip = require('jszip');
+const { Readable } = require('node:stream');
 const { env } = require('../config/env');
 const { prisma } = require('../config/prisma');
 const privateFileStorage = require('./privateFileStorage');
@@ -360,6 +361,36 @@ async function getPublicMaterialFile(moduleId, materialId, preview = false) {
   };
 }
 
+async function createPublicStaticMaterialPreview(moduleId, fileName, source) {
+  if (!/^[1-5]$/.test(moduleId) || typeof fileName !== 'string' || /[\\/]/.test(fileName)) {
+    throw new ApiError(404, 'Published study material not found.');
+  }
+
+  const extension = path.extname(fileName).slice(1).toLowerCase();
+  if (!['pdf', 'ppt', 'pptx'].includes(extension)) {
+    throw new ApiError(404, 'Published study material not found.');
+  }
+
+  if (!Buffer.isBuffer(source) || source.length === 0) {
+    throw new ApiError(400, 'The presentation file is empty.');
+  }
+  if (source.length > MAX_UPLOAD_SIZE) {
+    throw new ApiError(413, 'Study materials must be 50 MB or smaller.');
+  }
+
+  await validateFile({ originalname: fileName, size: source.length, buffer: source });
+  if (extension === 'pdf') {
+    return { stream: Readable.from([source]), fileName, mimeType: 'application/pdf' };
+  }
+
+  const pdf = await convertOfficeDocument({ buffer: source }, extension);
+  return {
+    stream: Readable.from([pdf]),
+    fileName: `${path.parse(fileName).name}.pdf`,
+    mimeType: 'application/pdf',
+  };
+}
+
 async function deleteMaterial(ownerId, materialId) {
   const material = await prisma.dataScienceMaterial.findFirst({
     where: { id: materialId, ownerId },
@@ -397,6 +428,7 @@ module.exports = {
   deleteModule,
   getMaterialFile,
   getPublicMaterialFile,
+  createPublicStaticMaterialPreview,
   listModules,
   listPublicModules,
   MAX_UPLOAD_SIZE,

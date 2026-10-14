@@ -5,7 +5,7 @@ const { dataScienceFileUpload } = require('../middleware/dataScienceFileUpload')
 const { optionalAuthenticate } = require('../middleware/optionalAuthenticate');
 const { requireRole } = require('../middleware/requireRole');
 const { requireTrustedOrigin } = require('../middleware/requireTrustedOrigin');
-const { publicDataScienceUploadRateLimiter } = require('../middleware/rateLimiter');
+const { publicDataSciencePreviewRateLimiter, publicDataScienceUploadRateLimiter } = require('../middleware/rateLimiter');
 const { validateRequest } = require('../middleware/validateRequest');
 const { validateUuidParam } = require('../middleware/validateUuidParam');
 const { materialUpdateSchema, materialUploadSchema, moduleUpdateSchema } = require('../validators/dataScienceValidators');
@@ -13,6 +13,13 @@ const { materialUpdateSchema, materialUploadSchema, moduleUpdateSchema } = requi
 const router = express.Router();
 
 router.get('/public/modules', optionalAuthenticate, controller.listPublicModules);
+router.post(
+  '/public/static/modules/:moduleId/materials/:fileName/preview',
+  requireTrustedOrigin,
+  publicDataSciencePreviewRateLimiter,
+  express.raw({ type: 'application/octet-stream', limit: '50mb' }),
+  controller.previewPublicStaticMaterial,
+);
 router.get(
   '/public/modules/:moduleId/materials/:materialId/file',
   validateUuidParam('moduleId'),

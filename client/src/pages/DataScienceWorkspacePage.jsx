@@ -2,6 +2,10 @@ import { ArrowLeft, ArrowUpRight, BookOpen, Download, FileText } from 'lucide-re
 import { Link, useParams } from 'react-router-dom';
 import { dataScienceModules } from '../data/dataScienceModules';
 
+function getReaderPath(module, material) {
+  return `/modules/data-science/${module.id}/read/${material.id}`;
+}
+
 function ModuleListPage() {
   return (
     <section className="ds-workspace-page">
@@ -30,14 +34,13 @@ function ModuleListPage() {
   );
 }
 
-function PresentationCard({ material }) {
+function PresentationCard({ module, material }) {
+  const readerPath = getReaderPath(module, material);
   return (
     <article className="ds-study-card">
-      <a
+      <Link
         className="ds-document-cover-link"
-        href={material.url}
-        target="_blank"
-        rel="noreferrer"
+        to={readerPath}
         aria-label={`Open ${material.title}`}
       >
         <span className="ds-document-cover">
@@ -46,7 +49,7 @@ function PresentationCard({ material }) {
           <strong>{material.title}</strong>
           <span className="ds-cover-file">{material.originalFileName}</span>
         </span>
-      </a>
+      </Link>
       <div className="ds-study-card-info">
         <div className="ds-study-card-heading">
           <div>
@@ -56,9 +59,9 @@ function PresentationCard({ material }) {
         </div>
         <p className="ds-original-name">{material.originalFileName}</p>
         <div className="ds-study-card-actions">
-          <a className="academic-button" href={material.url} target="_blank" rel="noreferrer">
+          <Link className="academic-button" to={readerPath}>
             <BookOpen size={14} /> Open PPT
-          </a>
+          </Link>
           <a className="academic-button is-secondary" href={material.url} download={material.originalFileName}>
             <Download size={14} /> Download
           </a>
@@ -87,7 +90,7 @@ function ModuleDetailPage({ module }) {
         </div>
         {module.materials.length > 0 ? (
           <div className="ds-study-grid">
-            {module.materials.map((material) => <PresentationCard key={material.id} material={material} />)}
+            {module.materials.map((material) => <PresentationCard key={material.id} module={module} material={material} />)}
           </div>
         ) : (
           <div className="ds-materials-empty">
