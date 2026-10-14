@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchDataScienceFile, fetchPublicStaticDataSciencePreview, getDataScienceModules, getPublicDataScienceModules } from '../services/dataScience';
+import { fetchDataScienceFile, getDataScienceModules, getPublicDataScienceModules } from '../services/dataScience';
 import { openPdfDocument } from '../services/pdfReader';
 import { useAuth } from '../context/AuthContext';
 import { dataScienceModules } from '../data/dataScienceModules';
@@ -220,7 +220,9 @@ export default function DataScienceReaderPage() {
         if (staticModule && staticMaterial) {
           setModule(staticModule);
           setMaterial(staticMaterial);
-          const file = await fetchPublicStaticDataSciencePreview(moduleId, staticMaterial.originalFileName);
+          const response = await fetch(staticMaterial.previewUrl);
+          if (!response.ok) throw new Error('This presentation preview is missing. Please contact the library administrator.');
+          const file = await response.blob();
           if (!active) return;
           await preparePdf(file);
           return;

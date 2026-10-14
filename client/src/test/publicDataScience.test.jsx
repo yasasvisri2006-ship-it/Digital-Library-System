@@ -44,6 +44,10 @@ describe('static Data Science modules', () => {
       'href',
       '/data-science/module1/Data%20Analysis%20and%20Analytics.pptx',
     );
+    expect(screen.getByRole('link', { name: 'Open Data Analysis and Analytics', exact: true })).toHaveAttribute(
+      'href',
+      '/modules/data-science/1/read/module-1-material-1',
+    );
     expect(getPublicDataScienceModules).not.toHaveBeenCalled();
   });
 
@@ -76,6 +80,10 @@ describe('static Data Science modules', () => {
     expect(screen.getAllByRole('link', { name: 'Download' })[2]).toHaveAttribute(
       'href',
       '/data-science/module2/Dimensionality.%20PCA%2C%20LDA.pdf',
+    );
+    expect(screen.getByRole('link', { name: 'Open Decision Tree', exact: true })).toHaveAttribute(
+      'href',
+      '/modules/data-science/2/read/module-2-material-2',
     );
     expect(getPublicDataScienceModules).not.toHaveBeenCalled();
   });

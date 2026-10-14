@@ -59,15 +59,3 @@ export async function fetchDataScienceFile(moduleId, materialId, preview = false
   );
   return data;
 }
-
-export async function fetchPublicStaticDataSciencePreview(moduleId, fileName) {
-  const response = await fetch(`/data-science/module${moduleId}/${encodeURIComponent(fileName)}`);
-  if (!response.ok) throw new Error('The original presentation could not be loaded.');
-  const source = await response.blob();
-  const { data } = await api.post(
-    `/data-science/public/static/modules/${moduleId}/materials/${encodeURIComponent(fileName)}/preview`,
-    source,
-    { headers: { 'Content-Type': 'application/octet-stream' }, responseType: 'blob' },
-  );
-  return data;
-}

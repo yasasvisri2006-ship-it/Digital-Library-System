@@ -42,6 +42,9 @@ export const dataScienceModules = Array.from({ length: 5 }, (_, index) => {
         originalFileName,
         fileType: extension,
         url: `/data-science/module${number}/${encodeURIComponent(originalFileName)}`,
+        previewUrl: extension === 'PDF'
+          ? `/data-science/module${number}/${encodeURIComponent(originalFileName)}`
+          : `/data-science/previews/module${number}/${encodeURIComponent(originalFileName.replace(/\.[^.]+$/, '.pdf'))}`,
       };
     }),
   };
